@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Reportes{% endblock %}
+{% block page_title %}Reportes{% endblock %}
+{% block content %}
+<div class="page-hd"><div><h2>Reportes</h2><p>Análisis de ventas y rendimiento</p></div></div>
+
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n mono" style="font-size:20px">S/.{{ "%.0f"|format(total_revenue) }}</div><div class="stat-l">Ingresos totales</div></div>
+  <div class="stat"><div class="stat-n">{{ total_orders }}</div><div class="stat-l">Total órdenes</div></div>
+  <div class="stat"><div class="stat-n">{{ total_bills }}</div><div class="stat-l">Cuentas cobradas</div></div>
+  <div class="stat"><div class="stat-n mono" style="font-size:20px">S/.{{ "%.2f"|format(avg_ticket) }}</div><div class="stat-l">Ticket promedio</div></div>
+  <div class="stat"><div class="stat-n mono" style="font-size:20px">S/.{{ "%.2f"|format(max_ticket) }}</div><div class="stat-l">Ticket máximo</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+  <!-- Bar chart -->
+  <div class="card">
+    <div class="card-title">Ingresos últimos 7 días</div>
+    {% set max_rev = revenues|max if revenues|max > 0 else 1 %}
+    <div style="display:flex;align-items:flex-end;gap:8px;height:160px;padding:10px 0">
+      {% for i in range(days|length) %}
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px">
+        <span class="mono" style="font-size:9px;color:#9ca3af">{{ revenues[i]|int }}</span>
+        <div style="background:#2563eb;border-radius:4px 4px 0 0;width:100%;min-height:3px;height:{{ [(revenues[i]/max_rev*130)|int, 3]|max }}px;opacity:.75"></div>
+        <span class="mono" style="font-size:9px;color:#9ca3af">{{ days[i] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Productos más vendidos -->
+  <div class="card">
+    <div class="card-title">Productos más vendidos</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Producto</th><th>Cant.</th><th>Total S/.</th></tr></thead>
+        <tbody>
+        {% for i, row in enumerate(top_products) %}
+        <tr>
+          <td class="mono text-muted">{{ i+1 }}</td>
+          <td class="fw-500">{{ row.name }}</td>
+          <td><span class="badge badge-blue mono">{{ row.total_qty }}</span></td>
+          <td class="mono">{{ "%.2f"|format(row.total_revenue) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted text-sm" style="text-align:center;padding:20px">Sin datos aún</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Métodos de pago -->
+<div class="card">
+  <div class="card-title">Métodos de pago</div>
+  {% if payment_stats %}
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    {% for ps in payment_stats %}
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 20px;min-width:140px">
+      <div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono',monospace;margin-bottom:4px">{{ ps.payment_method }}</div>
+      <div style="font-size:20px;font-weight:600;color:#111827">{{ ps.count }}</div>
+      <div style="font-size:12px;color:#6b7280">cobros</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-muted text-sm">Sin datos de pago aún.</p>
+  {% endif %}
+</div>
+{% endblock %}

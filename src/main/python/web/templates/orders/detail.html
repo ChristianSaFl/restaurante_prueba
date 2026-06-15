@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Orden #{{ order.id }}{% endblock %}
+{% block page_title %}Orden #{{ order.id }}{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div>
+    <h2>Orden #{{ order.id }}</h2>
+    <p class="mono">{{ order.created_at.strftime('%d/%m/%Y · %H:%M') }}{% if order.table %} · Mesa {{ order.table.number }}{% endif %}{% if order.notes %} · {{ order.notes }}{% endif %}</p>
+  </div>
+  <div class="btn-group">
+    <a href="/orders" class="btn btn-secondary">← Volver</a>
+    {% if order.status == 'open' %}
+    <form class="inline" method="POST" action="/orders/{{ order.id }}/close">
+      <button class="btn btn-warning">Cerrar orden</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start">
+
+  <div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin:0">Ítems del pedido</div>
+        {% if order.status=='open' %}<span class="badge badge-green">Abierta</span>{% else %}<span class="badge badge-gray">Cerrada</span>{% endif %}
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Producto</th><th>P. Unit.</th><th>Cant.</th><th>Subtotal</th><th>Nota</th>{% if order.status=='open' %}<th></th>{% endif %}</tr></thead>
+          <tbody>
+          {% for it in order.items %}
+          <tr>
+            <td class="fw-500">{{ it.product.name }}</td>
+            <td class="mono">S/. {{ "%.2f"|format(it.unit_price) }}</td>
+            <td class="mono text-center">{{ it.quantity }}</td>
+            <td class="mono fw-500">S/. {{ "%.2f"|format(it.subtotal()) }}</td>
+            <td class="text-muted text-sm">{{ it.notes or '—' }}</td>
+            {% if order.status=='open' %}
+            <td>
+              <form class="inline" method="POST" action="/orders/{{ order.id }}/remove-item/{{ it.id }}">
+                <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="return confirm('¿Quitar este ítem?')">✕</button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="{% if order.status=='open' %}5{% else %}4{% endif %}" class="text-right">TOTAL</td>
+              <td class="mono fw-600">S/. {{ "%.2f"|format(order.total()) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    {% if order.status == 'open' %}
+    <div class="card">
+      <div class="card-title">Agregar producto</div>
+      <form method="POST" action="/orders/{{ order.id }}/add-item" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div class="form-group" style="flex:2;margin:0">
+          <label>Producto</label>
+          <select name="product_id">
+            {% set products = [] %}
+            {% for it in order.items %}{% set _ = products.append(it.product_id) %}{% endfor %}
+            {% from 'macros.html' import product_options ignore missing %}
+            <option value="">— seleccionar —</option>
+            {% for p in products %}
+            <option value="{{ p.id }}">{{ p.name }} — S/. {{ "%.2f"|format(p.price) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="width:80px;margin:0">
+          <label>Cant.</label>
+          <input type="number" name="quantity" value="1" min="1" style="text-align:center">
+        </div>
+        <button type="submit" class="btn btn-primary">Agregar</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-title">Resumen</div>
+      <div style="font-size:28px;font-weight:600;color:#111827;margin-bottom:16px" class="mono">
+        S/. {{ "%.2f"|format(order.total()) }}
+      </div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:20px">
+        {{ order.items|length }} ítem(s)
+      </div>
+      {% if order.status == 'open' %}
+        <form method="POST" action="/bills/generate/{{ order.id }}">
+          <button class="btn btn-primary btn-block btn-lg">Generar cuenta</button>
+        </form>
+      {% else %}
+        <span class="badge badge-gray" style="padding:10px;display:block;text-align:center">Orden cerrada</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Productos{% endblock %}
+{% block page_title %}Productos{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Productos</h2><p>{{ products|length }} registrados en el menú</p></div>
+  {% if current_user.role=='admin' %}<a href="/products/new" class="btn btn-primary">+ Nuevo</a>{% endif %}
+</div>
+<div class="card">
+  <form method="GET" class="filter-bar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar..." style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none;min-width:180px">
+    <select name="category" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
+      <option value="">Todas las categorías</option>
+      {% for c in categories %}<option value="{{ c }}" {% if c==cat %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+    {% if q or cat %}<a href="/products" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Estado</th>{% if current_user.role=='admin' %}<th></th>{% endif %}</tr></thead>
+      <tbody>
+      {% for p in products %}
+      <tr>
+        <td class="mono text-muted">{{ p.id }}</td>
+        <td class="fw-500">{{ p.name }}</td>
+        <td><span class="badge badge-blue">{{ p.category }}</span></td>
+        <td class="mono fw-500">S/. {{ "%.2f"|format(p.price) }}</td>
+        <td>{% if p.available %}<span class="badge badge-green">Activo</span>{% else %}<span class="badge badge-gray">Inactivo</span>{% endif %}</td>
+        {% if current_user.role=='admin' %}
+        <td>
+          <div class="btn-group">
+            <a href="/products/{{ p.id }}/edit" class="btn btn-secondary btn-sm">Editar</a>
+            <form class="inline" method="POST" action="/products/{{ p.id }}/delete">
+              <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="return confirm('¿Eliminar {{ p.name }}?')">Eliminar</button>
+            </form>
+          </div>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr><td colspan="6"><div class="empty"><span class="empty-icon">📦</span><h3>Sin productos</h3><p>Agrega el primer producto al menú</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

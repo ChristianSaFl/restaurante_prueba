@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Cuentas{% endblock %}
+{% block page_title %}Cuentas{% endblock %}
+{% block content %}
+<div class="page-hd"><div><h2>Cuentas</h2><p>Historial de facturación</p></div></div>
+<div class="card">
+  <div class="filter-bar">
+    <div class="tabs">
+      <a href="/bills" class="tab {% if not status %}active{% endif %}">Todas</a>
+      <a href="/bills?status=pending" class="tab {% if status=='pending' %}active{% endif %}">Pendientes</a>
+      <a href="/bills?status=paid" class="tab {% if status=='paid' %}active{% endif %}">Pagadas</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cuenta</th><th>Orden</th><th>Subtotal</th><th>Desc.</th><th>IGV</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for b in bills %}
+      <tr>
+        <td><a href="/bills/{{ b.id }}" class="mono fw-500" style="color:#2563eb;text-decoration:none">#{{ b.id }}</a></td>
+        <td><a href="/orders/{{ b.order_id }}" class="mono text-muted" style="text-decoration:none">#{{ b.order_id }}</a></td>
+        <td class="mono">S/. {{ "%.2f"|format(b.subtotal()) }}</td>
+        <td class="mono text-muted">{{ b.discount_percentage }}%</td>
+        <td class="mono">S/. {{ "%.2f"|format(b.tax()) }}</td>
+        <td class="mono fw-600">S/. {{ "%.2f"|format(b.total()) }}</td>
+        <td>{% if b.paid %}<span class="badge badge-green">Pagada</span>{% else %}<span class="badge badge-amber">Pendiente</span>{% endif %}</td>
+        <td><a href="/bills/{{ b.id }}" class="btn btn-secondary btn-sm">Ver</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8"><div class="empty"><span class="empty-icon">🧾</span><h3>Sin cuentas</h3><p>Aparecerán al generar una orden</p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

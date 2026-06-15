@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Nueva orden{% endblock %}
+{% block page_title %}Nueva orden{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Nueva orden</h2><p>Selecciona productos y confirma</p></div>
+  <a href="/orders" class="btn btn-secondary">← Volver</a>
+</div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div style="display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="card-title" style="margin:0">Productos</div>
+      <div class="form-group" style="margin:0">
+        <select id="table_sel" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none;min-width:160px">
+          <option value="">Sin mesa</option>
+          {% for t in tables %}<option value="{{ t.id }}">Mesa {{ t.number }} ({{ t.capacity }}p.) {% if t.occupied %}· ocupada{% endif %}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    {% if products %}
+    <form method="POST" id="order-form">
+      <input type="hidden" name="table_id" id="table_id_hid">
+      {% set cur = namespace(cat='') %}
+      {% for p in products %}
+        {% if p.category != cur.cat %}{% set cur.cat = p.category %}
+          <div class="section-label" style="{% if not loop.first %}margin-top:18px{% endif %}">{{ p.category }}</div>
+        {% endif %}
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f3f4f6">
+          <input type="checkbox" name="product_id" value="{{ p.id }}" id="p{{ p.id }}" style="width:16px;height:16px;accent-color:#2563eb;cursor:pointer;flex-shrink:0">
+          <label for="p{{ p.id }}" style="flex:1;cursor:pointer;font-size:13.5px;color:#374151;font-weight:400">{{ p.name }}</label>
+          <span class="mono" style="font-size:13px;color:#6b7280;min-width:70px;text-align:right">S/. {{ "%.2f"|format(p.price) }}</span>
+          <input type="number" name="quantity" value="1" min="1" max="99" style="width:52px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;outline:none">
+        </div>
+      {% endfor %}
+      <div class="btn-group" style="margin-top:20px">
+        <button type="submit" class="btn btn-primary btn-lg">Confirmar orden</button>
+        <a href="/orders" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </form>
+    {% else %}
+    <div class="empty"><span class="empty-icon">📦</span><h3>Sin productos</h3><p><a href="/products/new" style="color:#2563eb">Agrega primero</a></p></div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="position:sticky;top:70px">
+    <div class="card-title">Resumen</div>
+    <div id="sum-items" style="min-height:60px;font-size:13px;color:#9ca3af">Selecciona productos.</div>
+    <hr>
+    <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:600;color:#111827">
+      <span>Total</span>
+      <span class="mono" id="sum-total">S/. 0.00</span>
+    </div>
+  </div>
+</div>
+<script>
+const P = { {% for p in products %}"{{ p.id }}":{{ p.price }}, {% endfor %} };
+const N = { {% for p in products %}"{{ p.id }}":"{{ p.name }}", {% endfor %} };
+document.getElementById('table_sel').addEventListener('change', function(){ document.getElementById('table_id_hid').value = this.value; });
+function upd(){
+  var cbs=document.querySelectorAll('[name=product_id]'), qs=document.querySelectorAll('[name=quantity]');
+  var html='', tot=0;
+  cbs.forEach(function(cb,i){
+    if(cb.checked){ var q=parseInt(qs[i].value)||1, s=P[cb.value]*q; tot+=s;
+      html+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:12.5px"><span style="color:#6b7280">'+N[cb.value]+' ×'+q+'</span><span class="mono">S/. '+s.toFixed(2)+'</span></div>';
+    }
+  });
+  document.getElementById('sum-items').innerHTML = html || '<span style="color:#d1d5db">Selecciona productos.</span>';
+  document.getElementById('sum-total').textContent = 'S/. '+tot.toFixed(2);
+}
+document.querySelectorAll('[name=product_id],[name=quantity]').forEach(function(el){ el.addEventListener('change', upd); });
+</script>
+{% endblock %}

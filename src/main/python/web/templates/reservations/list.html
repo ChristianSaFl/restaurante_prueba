@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Reservas{% endblock %}
+{% block page_title %}Reservas{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Reservas</h2><p>Gestión de reservaciones del salón</p></div>
+  <a href="/reservations/new" class="btn btn-primary">+ Nueva reserva</a>
+</div>
+
+<div class="card">
+  <form method="GET" class="filter-bar">
+    <input type="date" name="date" value="{{ filter_date }}" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
+    <div class="tabs">
+      <a href="/reservations" class="tab {% if not filter_status %}active{% endif %}">Todas</a>
+      <a href="/reservations?status=pending" class="tab {% if filter_status=='pending' %}active{% endif %}">Pendientes</a>
+      <a href="/reservations?status=confirmed" class="tab {% if filter_status=='confirmed' %}active{% endif %}">Confirmadas</a>
+      <a href="/reservations?status=cancelled" class="tab {% if filter_status=='cancelled' %}active{% endif %}">Canceladas</a>
+    </div>
+    <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+    {% if filter_date or filter_status %}<a href="/reservations" class="btn btn-ghost btn-sm">Limpiar</a>{% endif %}
+  </form>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Cliente</th><th>Teléfono</th><th>Fecha</th><th>Hora</th><th>Mesa</th><th>Comensales</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+      {% for r in reservations %}
+      <tr>
+        <td class="fw-500">{{ r.customer_name }}</td>
+        <td class="mono text-muted">{{ r.customer_phone or '—' }}</td>
+        <td class="mono">{{ r.date.strftime('%d/%m/%Y') }}</td>
+        <td class="mono">{{ r.time }}</td>
+        <td>{% if r.table %}<span class="badge badge-gray">Mesa {{ r.table.number }}</span>{% else %}<span class="text-muted">Sin asignar</span>{% endif %}</td>
+        <td class="mono text-center">{{ r.guests }}</td>
+        <td>
+          {% if r.status == 'confirmed' %}<span class="badge badge-green">Confirmada</span>
+          {% elif r.status == 'cancelled' %}<span class="badge badge-red">Cancelada</span>
+          {% else %}<span class="badge badge-amber">Pendiente</span>{% endif %}
+        </td>
+        <td>
+          <div class="btn-group">
+            {% if r.status == 'pending' %}
+              <form class="inline" method="POST" action="/reservations/{{ r.id }}/confirm">
+                <button class="btn btn-success btn-sm">Confirmar</button>
+              </form>
+              <form class="inline" method="POST" action="/reservations/{{ r.id }}/cancel">
+                <button class="btn btn-ghost btn-sm" style="color:#dc2626">Cancelar</button>
+              </form>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+              <form class="inline" method="POST" action="/reservations/{{ r.id }}/delete">
+                <button class="btn btn-ghost btn-sm" style="color:#9ca3af" onclick="return confirm('¿Eliminar reserva?')">✕</button>
+              </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8">
+        <div class="empty">
+          <span class="empty-icon">📅</span>
+          <h3>Sin reservas</h3>
+          <p><a href="/reservations/new" style="color:#2563eb">Crea la primera reserva</a></p>
+        </div>
+      </td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

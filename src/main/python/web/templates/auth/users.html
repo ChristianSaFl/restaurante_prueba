@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Usuarios</h2><p>{{ users|length }} cuentas registradas</p></div>
+  <a href="/admin/users/new" class="btn btn-primary">+ Nuevo usuario</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Creado</th><th></th></tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr>
+        <td class="mono text-muted">{{ u.id }}</td>
+        <td class="fw-500">{{ u.username }}</td>
+        <td>{% if u.role=='admin' %}<span class="badge badge-blue">admin</span>{% else %}<span class="badge badge-gray">staff</span>{% endif %}</td>
+        <td class="mono text-muted text-sm">{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+        <td>
+          {% if u.username != 'admin' %}
+          <form class="inline" method="POST" action="/admin/users/{{ u.id }}/delete">
+            <button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="return confirm('¿Eliminar a {{ u.username }}?')">Eliminar</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

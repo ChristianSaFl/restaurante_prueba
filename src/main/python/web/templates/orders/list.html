@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Órdenes{% endblock %}
+{% block page_title %}Órdenes{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Órdenes</h2><p>Historial de pedidos</p></div>
+  <a href="/orders/new" class="btn btn-primary">+ Nueva orden</a>
+</div>
+<div class="card">
+  <div class="filter-bar">
+    <div class="tabs">
+      <a href="/orders" class="tab {% if not status %}active{% endif %}">Todas</a>
+      <a href="/orders?status=open" class="tab {% if status=='open' %}active{% endif %}">Abiertas</a>
+      <a href="/orders?status=closed" class="tab {% if status=='closed' %}active{% endif %}">Cerradas</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Orden</th><th>Mesa</th><th>Ítems</th><th>Total</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+      <tbody>
+      {% for o in orders %}
+      <tr>
+        <td><a href="/orders/{{ o.id }}" class="mono fw-500" style="color:#2563eb;text-decoration:none">#{{ o.id }}</a></td>
+        <td>{% if o.table %}<span class="badge badge-gray">Mesa {{ o.table.number }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td class="mono">{{ o.items|length }}</td>
+        <td class="mono fw-500">S/. {{ "%.2f"|format(o.total()) }}</td>
+        <td class="mono text-muted text-sm">{{ o.created_at.strftime('%d/%m %H:%M') }}</td>
+        <td>{% if o.status=='open' %}<span class="badge badge-green">Abierta</span>{% else %}<span class="badge badge-gray">Cerrada</span>{% endif %}</td>
+        <td>
+          <div class="btn-group">
+            <a href="/orders/{{ o.id }}" class="btn btn-secondary btn-sm">Ver</a>
+            {% if o.status=='open' %}
+            <form class="inline" method="POST" action="/bills/generate/{{ o.id }}">
+              <button class="btn btn-primary btn-sm">Cobrar</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty"><span class="empty-icon">📋</span><h3>Sin órdenes</h3><p><a href="/orders/new" style="color:#2563eb">Crea la primera</a></p></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

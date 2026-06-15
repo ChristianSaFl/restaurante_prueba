@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Resumen{% endblock %}
+{% block page_title %}Resumen{% endblock %}
+{% block content %}
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">{{ total_products }}</div><div class="stat-l">Productos activos</div></div>
+  <div class="stat"><div class="stat-n">{{ free_tables }}<span style="font-size:14px;color:#9ca3af">/{{ total_tables }}</span></div><div class="stat-l">Mesas libres</div></div>
+  <div class="stat"><div class="stat-n">{{ open_orders }}</div><div class="stat-l">Órdenes abiertas</div></div>
+  <div class="stat"><div class="stat-n">{{ pending_bills }}</div><div class="stat-l">Cuentas pendientes</div></div>
+  <div class="stat"><div class="stat-n mono" style="font-size:20px">S/.{{ "%.0f"|format(revenue_today) }}</div><div class="stat-l">Ingresos hoy</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+  <!-- Órdenes recientes -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Órdenes recientes</div>
+      <a href="/orders" class="btn btn-ghost btn-sm">Ver todas →</a>
+    </div>
+    {% if recent_orders %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Mesa</th><th>Total</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for o in recent_orders %}
+        <tr>
+          <td><a href="/orders/{{ o.id }}" class="mono" style="color:#2563eb;text-decoration:none">#{{ o.id }}</a></td>
+          <td>{% if o.table %}Mesa {{ o.table.number }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="mono">S/. {{ "%.2f"|format(o.total()) }}</td>
+          <td>{% if o.status=='open' %}<span class="badge badge-green">Abierta</span>{% else %}<span class="badge badge-gray">Cerrada</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty"><span class="empty-icon">📋</span><h3>Sin órdenes aún</h3></div>
+    {% endif %}
+  </div>
+
+  <!-- Reservas próximas -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Próximas reservas</div>
+      <a href="/reservations" class="btn btn-ghost btn-sm">Ver todas →</a>
+    </div>
+    {% if upcoming_reservations %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+        <tbody>
+        {% for r in upcoming_reservations %}
+        <tr>
+          <td class="fw-500">{{ r.customer_name }}</td>
+          <td class="mono text-sm">{{ r.date.strftime('%d/%m') }}</td>
+          <td class="mono text-sm">{{ r.time }}</td>
+          <td>
+            {% if r.status=='confirmed' %}<span class="badge badge-green">Confirmada</span>
+            {% elif r.status=='cancelled' %}<span class="badge badge-red">Cancelada</span>
+            {% else %}<span class="badge badge-amber">Pendiente</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty"><span class="empty-icon">📅</span><h3>Sin reservas próximas</h3></div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+  <!-- Acciones rápidas -->
+  <div class="card">
+    <div class="card-title">Acciones rápidas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <a href="/orders/new" class="btn btn-primary">+ Nueva orden</a>
+      <a href="/reservations/new" class="btn btn-secondary">+ Reserva</a>
+      <a href="/products/new" class="btn btn-secondary">+ Producto</a>
+      <a href="/tables/new" class="btn btn-secondary">+ Mesa</a>
+      <a href="/bills" class="btn btn-secondary">Ver cuentas</a>
+      {% if current_user.role=='admin' %}<a href="/reports" class="btn btn-secondary">Reportes</a>{% endif %}
+    </div>
+  </div>
+
+  <!-- Estado de mesas -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin:0">Estado del salón</div>
+      <a href="/tables" class="btn btn-ghost btn-sm">Gestionar →</a>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      {% for t in all_tables %}
+      <div style="border:1px solid {% if t.occupied %}#fecaca{% else %}#d1fae5{% endif %};background:{% if t.occupied %}#fef2f2{% else %}#f0fdf4{% endif %};border-radius:8px;padding:10px 14px;text-align:center;min-width:60px">
+        <div style="font-size:16px;font-weight:600;color:{% if t.occupied %}#dc2626{% else %}#16a34a{% endif %}">{{ t.number }}</div>
+        <div style="font-size:10px;color:{% if t.occupied %}#dc2626{% else %}#16a34a{% endif %};margin-top:2px">{% if t.occupied %}ocup.{% else %}libre{% endif %}</div>
+      </div>
+      {% else %}
+      <span class="text-muted text-sm">Sin mesas</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

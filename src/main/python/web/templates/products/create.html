@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Nuevo producto{% endblock %}
+{% block page_title %}Nuevo producto{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Nuevo producto</h2><p>Agrega un ítem al menú</p></div>
+  <a href="/products" class="btn btn-secondary">← Volver</a>
+</div>
+{% if error %}<div class="alert alert-danger" id="error-message">{{ error }}</div>{% endif %}
+<div class="card" style="max-width:480px">
+  <form method="POST" id="create-product-form">
+    <div class="form-row">
+      <div class="form-group"><label>Nombre</label><input type="text" name="name" id="name" placeholder="ej: Pizza Margherita" required autofocus></div>
+      <div class="form-group"><label>Precio (S/.)</label><input type="number" name="price" id="price" step="0.01" min="0.01" placeholder="0.00" required></div>
+    </div>
+    <div class="form-group">
+      <label>Categoría</label>
+      <select name="category">{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+    </div>
+    <div class="btn-group">
+      <button type="submit" id="submit-btn" class="btn btn-primary">Guardar producto</button>
+      <a href="/products" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

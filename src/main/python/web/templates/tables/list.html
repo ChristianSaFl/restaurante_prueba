@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Mesas{% endblock %}
+{% block page_title %}Mesas{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Mesas</h2><p>Estado del salón en tiempo real</p></div>
+  <a href="/tables/new" class="btn btn-primary">+ Nueva mesa</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+{% for t in tables %}
+<div style="background:#fff;border:1px solid {% if t.occupied %}#fecaca{% else %}#d1fae5{% endif %};border-top:3px solid {% if t.occupied %}#dc2626{% else %}#16a34a{% endif %};border-radius:10px;padding:18px;text-align:center">
+  <div style="font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;font-family:'IBM Plex Mono',monospace">Mesa</div>
+  <div style="font-size:36px;font-weight:600;color:#111827;line-height:1">{{ t.number }}</div>
+  <div style="font-size:12px;color:#9ca3af;margin:5px 0 12px">{{ t.capacity }} personas</div>
+  {% if t.occupied %}
+    <div style="margin-bottom:10px"><span class="badge badge-red">Ocupada</span></div>
+    <form method="POST" action="/tables/{{ t.number }}/release">
+      <button class="btn btn-success btn-sm btn-block">Liberar</button>
+    </form>
+  {% else %}
+    <div style="margin-bottom:10px"><span class="badge badge-green">Libre</span></div>
+    <form method="POST" action="/tables/{{ t.number }}/occupy">
+      <button class="btn btn-secondary btn-sm btn-block">Ocupar</button>
+    </form>
+  {% endif %}
+</div>
+{% else %}
+<div class="card"><div class="empty"><span class="empty-icon">🪑</span><h3>Sin mesas</h3><p><a href="/tables/new">Crea la primera</a></p></div></div>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Nueva reserva{% endblock %}
+{% block page_title %}Nueva reserva{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Nueva reserva</h2><p>Registra una reservación de mesa</p></div>
+  <a href="/reservations" class="btn btn-secondary">← Volver</a>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+<div class="card" style="max-width:560px">
+  <form method="POST">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre del cliente</label>
+        <input type="text" name="customer_name" placeholder="ej: Juan Pérez" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" name="customer_phone" placeholder="ej: 999888777">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" name="date" required min="{{ today }}">
+      </div>
+      <div class="form-group">
+        <label>Hora</label>
+        <select name="time">
+          {% for h in ['12:00','12:30','13:00','13:30','14:00','14:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00'] %}
+          <option>{{ h }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>N° de comensales</label>
+        <input type="number" name="guests" min="1" max="20" value="2" required>
+      </div>
+      <div class="form-group">
+        <label>Mesa preferida</label>
+        <select name="table_id">
+          <option value="">Sin preferencia</option>
+          {% for t in tables %}
+          <option value="{{ t.id }}">Mesa {{ t.number }} ({{ t.capacity }}p.) {% if t.location %}· {{ t.location }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notas adicionales</label>
+      <textarea name="notes" rows="2" placeholder="ej: Ocasión especial, alergias, preferencias..." style="width:100%;padding:9px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;resize:vertical;outline:none"></textarea>
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">Crear reserva</button>
+      <a href="/reservations" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

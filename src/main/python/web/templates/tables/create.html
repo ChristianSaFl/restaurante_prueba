@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Nueva mesa{% endblock %}
+{% block page_title %}Nueva mesa{% endblock %}
+{% block content %}
+<div class="page-hd">
+  <div><h2>Nueva mesa</h2><p>Registrar una mesa en el salón</p></div>
+  <a href="/tables" class="btn btn-secondary">← Volver</a>
+</div>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div class="card" style="max-width:380px">
+  <form method="POST">
+    <div class="form-row">
+      <div class="form-group"><label>Número de mesa</label><input type="number" name="number" min="1" placeholder="ej: 6" required autofocus></div>
+      <div class="form-group"><label>Capacidad</label><input type="number" name="capacity" min="1" placeholder="ej: 4" required><span class="form-hint">Número de personas</span></div>
+    </div>
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">Crear mesa</button>
+      <a href="/tables" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
