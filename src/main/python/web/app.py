@@ -35,40 +35,33 @@ def create_seed_user(username, env_name, role):
     )
 
 
-# ── CODE SMELL ZONE (para SonarQube / Lab 07) ─────────────────────────────────
-# Estas funciones tienen code smells intencionales para el laboratorio de refactoring:
-# - Long Method, Magic Numbers, Duplicate Code, Dead Code, Poor Naming
-
-def p(x, y, z, w, v):  # CODE SMELL: poor naming, too many params
-    """Calcula precio con descuento - nombre horrible, parametros sin sentido"""
+def p(x, y, z, w, v):
     d = 0
     if w > 0:
         d = x * w / 100
-    t = (x - d) * 0.18  # CODE SMELL: magic number 0.18
+    t = (x - d) * 0.18
     r = x - d + t + y
-    if v == True:       # CODE SMELL: comparison to True
-        r = r * 1.10    # CODE SMELL: magic number
+    if v == True:
+        r = r * 1.10
     if v == False:
-        r = r * 1.0     # CODE SMELL: useless operation
-    total = r           # CODE SMELL: unnecessary variable
+        r = r * 1.0
+    total = r
     return total
 
 
 def get_product_info(pid):
-    """CODE SMELL: Long method que hace demasiadas cosas"""
     p = ProductModel.query.get(pid)
-    if p == None:       # CODE SMELL: should use 'is None'
+    if p == None:
         return None
     name = p.name
     price = p.price
     cat = p.category
     avail = p.available
-    # CODE SMELL: duplicated logic (same as in list_products)
     all_products = ProductModel.query.filter_by(available=True).all()
     count = 0
     for prod in all_products:
         if prod.category == cat:
-            count = count + 1  # CODE SMELL: should use +=
+            count = count + 1
     result = {}
     result['id'] = pid
     result['name'] = name
@@ -76,29 +69,28 @@ def get_product_info(pid):
     result['category'] = cat
     result['available'] = avail
     result['count_in_category'] = count
-    unused_var = "esto no se usa"  # CODE SMELL: dead code
+    unused_var = "esto no se usa"
     return result
 
 
 def calculate_revenue_stats(bills):
-    """CODE SMELL: Complejidad ciclomatica alta, metodo largo"""
     total = 0
     count = 0
     max_val = 0
-    min_val = 999999  # CODE SMELL: magic number
+    min_val = 999999
     for b in bills:
-        if b.paid == True:  # CODE SMELL: comparison to True
+        if b.paid == True:
             t = b.total()
-            total = total + t  # CODE SMELL: should use +=
+            total = total + t
             count = count + 1
             if t > max_val:
                 max_val = t
             if t < min_val:
                 min_val = t
-            if t > 100:     # CODE SMELL: magic number
-                if t > 200: # CODE SMELL: nested conditionals
+            if t > 100:
+                if t > 200:
                     if t > 500:
-                        pass  # CODE SMELL: empty block
+                        pass
     if count == 0:
         min_val = 0
     avg = 0
@@ -106,8 +98,6 @@ def calculate_revenue_stats(bills):
         avg = total / count
     return {'total': total, 'count': count, 'avg': avg, 'max': max_val, 'min': min_val}
 
-
-# ── Seed & Init ───────────────────────────────────────────────────────────────
 
 def seed():
     if not UserModel.query.first():
@@ -151,8 +141,6 @@ def initialize_database():
         seed()
 
 
-# ── Auth helpers ──────────────────────────────────────────────────────────────
-
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -186,8 +174,6 @@ def inject_user():
     return dict(current_user=g.user, enumerate=enumerate)
 
 
-# ── AUTH ──────────────────────────────────────────────────────────────────────
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if g.user:
@@ -209,8 +195,6 @@ def logout():
     flash("Sesión cerrada.", "success")
     return redirect(url_for("login"))
 
-
-# ── HOME ──────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 @login_required
@@ -236,8 +220,6 @@ def index():
         recent_orders=recent_orders, all_tables=all_tables,
         upcoming_reservations=upcoming_reservations)
 
-
-# ── PRODUCTS ──────────────────────────────────────────────────────────────────
 
 @app.route("/products")
 @login_required
@@ -312,8 +294,6 @@ def delete_product(pid):
     return redirect(url_for("list_products"))
 
 
-# ── TABLES ────────────────────────────────────────────────────────────────────
-
 @app.route("/tables")
 @login_required
 def list_tables():
@@ -365,8 +345,6 @@ def release_table(number):
     flash(f"Mesa {number} liberada.", "success")
     return redirect(url_for("list_tables"))
 
-
-# ── ORDERS ────────────────────────────────────────────────────────────────────
 
 @app.route("/orders")
 @login_required
@@ -446,7 +424,6 @@ def close_order(oid):
 @app.route("/orders/<int:oid>/add-item", methods=["POST"])
 @login_required
 def add_order_item(oid):
-    """Agrega un producto a una orden existente abierta."""
     order = OrderModel.query.get_or_404(oid)
     if order.status != "open":
         flash("No se puede modificar una orden cerrada.", "danger")
@@ -473,7 +450,6 @@ def add_order_item(oid):
 @app.route("/orders/<int:oid>/remove-item/<int:iid>", methods=["POST"])
 @login_required
 def remove_order_item(oid, iid):
-    """Elimina un ítem de una orden abierta."""
     item = OrderItemModel.query.get_or_404(iid)
     order = OrderModel.query.get_or_404(oid)
     if order.status != "open":
@@ -484,8 +460,6 @@ def remove_order_item(oid, iid):
     flash("Ítem eliminado.", "success")
     return redirect(url_for("order_detail", oid=oid))
 
-
-# ── BILLS ─────────────────────────────────────────────────────────────────────
 
 @app.route("/bills")
 @login_required
@@ -578,8 +552,6 @@ def pay_bill(bid):
     return redirect(url_for("list_bills"))
 
 
-# ── RESERVATIONS ──────────────────────────────────────────────────────────────
-
 @app.route("/reservations")
 @login_required
 def list_reservations():
@@ -666,8 +638,6 @@ def delete_reservation(rid):
     return redirect(url_for("list_reservations"))
 
 
-# ── REPORTS ───────────────────────────────────────────────────────────────────
-
 @app.route("/reports")
 @admin_required
 def reports():
@@ -713,8 +683,6 @@ def reports():
         avg_ticket=avg_ticket,
         max_ticket=max_ticket)
 
-
-# ── ADMIN: Users ──────────────────────────────────────────────────────────────
 
 @app.route("/admin/users")
 @admin_required
