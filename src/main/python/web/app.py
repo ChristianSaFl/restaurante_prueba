@@ -35,69 +35,6 @@ def create_seed_user(username, env_name, role):
     )
 
 
-def p(x, y, z, w, v):
-    d = 0
-    if w > 0:
-        d = x * w / 100
-    t = (x - d) * 0.18
-    r = x - d + t + y
-    if v == True:
-        r = r * 1.10
-    if v == False:
-        r = r * 1.0
-    total = r
-    return total
-
-
-def get_product_info(pid):
-    p = ProductModel.query.get(pid)
-    if p == None:
-        return None
-    name = p.name
-    price = p.price
-    cat = p.category
-    avail = p.available
-    all_products = ProductModel.query.filter_by(available=True).all()
-    count = 0
-    for prod in all_products:
-        if prod.category == cat:
-            count = count + 1
-    result = {}
-    result['id'] = pid
-    result['name'] = name
-    result['price'] = price
-    result['category'] = cat
-    result['available'] = avail
-    result['count_in_category'] = count
-    unused_var = "esto no se usa"
-    return result
-
-
-def calculate_revenue_stats(bills):
-    total = 0
-    count = 0
-    max_val = 0
-    min_val = 999999
-    for b in bills:
-        if b.paid == True:
-            t = b.total()
-            total = total + t
-            count = count + 1
-            if t > max_val:
-                max_val = t
-            if t < min_val:
-                min_val = t
-            if t > 100:
-                if t > 200:
-                    if t > 500:
-                        pass
-    if count == 0:
-        min_val = 0
-    avg = 0
-    if count > 0:
-        avg = total / count
-    return {'total': total, 'count': count, 'avg': avg, 'max': max_val, 'min': min_val}
-
 
 def seed():
     if not UserModel.query.first():
@@ -196,29 +133,39 @@ def logout():
     return redirect(url_for("login"))
 
 
+def get_today_revenue(today):
+    paid_today = BillModel.query.filter(
+        BillModel.paid == True,
+        db.func.date(BillModel.paid_at) == today
+    ).all()
+
+    return sum(bill.total() for bill in paid_today)
+
+
+def get_dashboard_data():
+    today = datetime.utcnow().date()
+
+    return {
+        "total_products": ProductModel.query.filter_by(available=True).count(),
+        "total_tables": TableModel.query.count(),
+        "free_tables": TableModel.query.filter_by(occupied=False).count(),
+        "open_orders": OrderModel.query.filter_by(status="open").count(),
+        "pending_bills": BillModel.query.filter_by(paid=False).count(),
+        "revenue_today": get_today_revenue(today),
+        "recent_orders": OrderModel.query.order_by(OrderModel.created_at.desc()).limit(5).all(),
+        "all_tables": TableModel.query.order_by(TableModel.number).all(),
+        "upcoming_reservations": ReservationModel.query.filter(
+            ReservationModel.date >= today,
+            ReservationModel.status != "cancelled"
+        ).order_by(ReservationModel.date, ReservationModel.time).limit(5).all()
+    }
+
+
 @app.route("/")
 @login_required
 def index():
-    total_products = ProductModel.query.filter_by(available=True).count()
-    total_tables   = TableModel.query.count()
-    free_tables    = TableModel.query.filter_by(occupied=False).count()
-    open_orders    = OrderModel.query.filter_by(status="open").count()
-    pending_bills  = BillModel.query.filter_by(paid=False).count()
-    today = datetime.utcnow().date()
-    paid_today     = BillModel.query.filter(BillModel.paid == True, db.func.date(BillModel.paid_at) == today).all()
-    revenue_today  = sum(b.total() for b in paid_today)
-    recent_orders  = OrderModel.query.order_by(OrderModel.created_at.desc()).limit(5).all()
-    all_tables     = TableModel.query.order_by(TableModel.number).all()
-    upcoming_reservations = ReservationModel.query.filter(
-        ReservationModel.date >= today,
-        ReservationModel.status != "cancelled"
-    ).order_by(ReservationModel.date, ReservationModel.time).limit(5).all()
-    return render_template("index.html",
-        total_products=total_products, total_tables=total_tables,
-        free_tables=free_tables, open_orders=open_orders,
-        pending_bills=pending_bills, revenue_today=revenue_today,
-        recent_orders=recent_orders, all_tables=all_tables,
-        upcoming_reservations=upcoming_reservations)
+    dashboard_data = get_dashboard_data()
+    return render_template("index.html", **dashboard_data)
 
 
 @app.route("/products")
@@ -357,50 +304,94 @@ def list_orders():
     return render_template("orders/list.html", orders=orders, status=status)
 
 
+def get_valid_quantity(value):
+    try:
+        quantity = int(value)
+        if quantity > 0:
+            return quantity
+    except ValueError:
+        return None
+    return None
+
+
+def add_items_to_order(order, product_ids, quantities, item_notes):
+    added = 0
+
+    for index, product_id in enumerate(product_ids):
+        if index >= len(quantities):
+            continue
+
+        quantity = get_valid_quantity(quantities[index])
+
+        if quantity is None:
+            continue
+
+        product = ProductModel.query.get(int(product_id))
+
+        if not product:
+            continue
+
+        note = item_notes[index] if index < len(item_notes) else ""
+
+        db.session.add(OrderItemModel(
+            order_id=order.id,
+            product_id=product.id,
+            quantity=quantity,
+            unit_price=product.price,
+            notes=note.strip() or None
+        ))
+
+        added += 1
+
+    return added
+
+
+def occupy_table_if_selected(table_id):
+    if not table_id:
+        return
+
+    table = TableModel.query.get(int(table_id))
+
+    if table:
+        table.occupied = True
+
+
 @app.route("/orders/new", methods=["GET", "POST"])
 @login_required
 def create_order():
-    error    = None
+    error = None
     products = ProductModel.query.filter_by(available=True).order_by(ProductModel.category).all()
-    tables   = TableModel.query.order_by(TableModel.number).all()
-    if request.method == "POST":
-        pids     = request.form.getlist("product_id")
-        qtys     = request.form.getlist("quantity")
-        table_id = request.form.get("table_id") or None
-        notes    = request.form.get("notes", "").strip()
-        if not pids:
-            error = "Selecciona al menos un producto."
-        else:
-            order = OrderModel(table_id=int(table_id) if table_id else None, notes=notes or None)
-            db.session.add(order)
-            db.session.flush()
-            added = 0
-            item_notes = request.form.getlist("item_notes")
-            for i, (pid, qty_s) in enumerate(zip(pids, qtys)):
-                try:
-                    qty = int(qty_s)
-                    if qty <= 0: continue
-                except:
-                    continue
-                prod = ProductModel.query.get(int(pid))
-                if prod:
-                    inote = item_notes[i] if i < len(item_notes) else ""
-                    db.session.add(OrderItemModel(
-                        order_id=order.id, product_id=prod.id,
-                        quantity=qty, unit_price=prod.price,
-                        notes=inote.strip() or None))
-                    added += 1
-            if added == 0:
-                db.session.rollback()
-                error = "No se agregó ningún producto válido."
-            else:
-                if table_id:
-                    t = TableModel.query.get(int(table_id))
-                    if t: t.occupied = True
-                db.session.commit()
-                flash(f"Orden #{order.id} creada. Total: S/. {order.total():.2f}", "success")
-                return redirect(url_for("order_detail", oid=order.id))
-    return render_template("orders/create.html", products=products, tables=tables, error=error)
+    tables = TableModel.query.order_by(TableModel.number).all()
+
+    if request.method != "POST":
+        return render_template("orders/create.html", products=products, tables=tables, error=error)
+
+    product_ids = request.form.getlist("product_id")
+    quantities = request.form.getlist("quantity")
+    item_notes = request.form.getlist("item_notes")
+    table_id = request.form.get("table_id") or None
+    notes = request.form.get("notes", "").strip()
+
+    if not product_ids:
+        error = "Selecciona al menos un producto."
+        return render_template("orders/create.html", products=products, tables=tables, error=error)
+
+    order = OrderModel(table_id=int(table_id) if table_id else None, notes=notes or None)
+    db.session.add(order)
+    db.session.flush()
+
+    added = add_items_to_order(order, product_ids, quantities, item_notes)
+
+    if added == 0:
+        db.session.rollback()
+        error = "No se agregó ningún producto válido."
+        return render_template("orders/create.html", products=products, tables=tables, error=error)
+
+    occupy_table_if_selected(table_id)
+    db.session.commit()
+
+    flash(f"Orden #{order.id} creada. Total: S/. {order.total():.2f}", "success")
+    return redirect(url_for("order_detail", oid=order.id))
 
 
 @app.route("/orders/<int:oid>")
@@ -638,17 +629,42 @@ def delete_reservation(rid):
     return redirect(url_for("list_reservations"))
 
 
+def get_last_seven_days_revenue():
+    days = []
+    revenues = []
+
+    for i in range(6, -1, -1):
+        current_day = (datetime.utcnow() - timedelta(days=i)).date()
+        paid_bills = BillModel.query.filter(
+            BillModel.paid == True,
+            db.func.date(BillModel.paid_at) == current_day
+        ).all()
+
+        days.append(current_day.strftime("%d/%m"))
+        revenues.append(round(sum(bill.total() for bill in paid_bills), 2))
+
+    return days, revenues
+
+
+def get_max_ticket(bills):
+    max_ticket = 0
+
+    for bill in bills:
+        total = bill.total()
+
+        if total > max_ticket:
+            max_ticket = total
+
+    return max_ticket
+
+
 @app.route("/reports")
 @admin_required
 def reports():
-    days, revenues = [], []
-    for i in range(6, -1, -1):
-        d    = (datetime.utcnow() - timedelta(days=i)).date()
-        paid = BillModel.query.filter(BillModel.paid == True, db.func.date(BillModel.paid_at) == d).all()
-        days.append(d.strftime("%d/%m"))
-        revenues.append(round(sum(b.total() for b in paid), 2))
-
     from sqlalchemy import func
+
+    days, revenues = get_last_seven_days_revenue()
+
     top_products = db.session.query(
         ProductModel.name,
         func.sum(OrderItemModel.quantity).label("total_qty"),
@@ -662,16 +678,12 @@ def reports():
         func.sum(BillModel.tip).label("total")
     ).filter_by(paid=True).group_by(BillModel.payment_method).all()
 
-    all_paid      = BillModel.query.filter_by(paid=True).all()
-    total_revenue = sum(b.total() for b in all_paid)
-    total_orders  = OrderModel.query.count()
-    total_bills   = len(all_paid)
-    avg_ticket    = (total_revenue / total_bills) if total_bills else 0
-
-    max_ticket = 0
-    for b in all_paid:
-        if b.total() > max_ticket:
-            max_ticket = b.total()
+    all_paid = BillModel.query.filter_by(paid=True).all()
+    total_revenue = sum(bill.total() for bill in all_paid)
+    total_orders = OrderModel.query.count()
+    total_bills = len(all_paid)
+    avg_ticket = total_revenue / total_bills if total_bills else 0
+    max_ticket = get_max_ticket(all_paid)
 
     return render_template("reports/index.html",
         days=days, revenues=revenues,
