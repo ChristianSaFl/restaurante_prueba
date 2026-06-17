@@ -126,7 +126,7 @@ def login():
     return render_template("auth/login.html", error=error)
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET"])
 def logout():
     session.clear()
     flash("Sesión cerrada.", "success")
@@ -161,14 +161,14 @@ def get_dashboard_data():
     }
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 @login_required
 def index():
     dashboard_data = get_dashboard_data()
     return render_template("index.html", **dashboard_data)
 
 
-@app.route("/products")
+@app.route("/products", methods=["GET"])
 @login_required
 def list_products():
     cat   = request.args.get("category", "")
@@ -241,7 +241,7 @@ def delete_product(pid):
     return redirect(url_for("list_products"))
 
 
-@app.route("/tables")
+@app.route("/tables", methods=["GET"])
 @login_required
 def list_tables():
     tables = TableModel.query.order_by(TableModel.number).all()
@@ -293,7 +293,7 @@ def release_table(number):
     return redirect(url_for("list_tables"))
 
 
-@app.route("/orders")
+@app.route("/orders", methods=["GET"])
 @login_required
 def list_orders():
     status = request.args.get("status", "")
@@ -394,7 +394,7 @@ def create_order():
     return redirect(url_for("order_detail", oid=order.id))
 
 
-@app.route("/orders/<int:oid>")
+@app.route("/orders/<int:oid>", methods=["GET"])
 @login_required
 def order_detail(oid):
     order    = OrderModel.query.get_or_404(oid)
@@ -416,25 +416,36 @@ def close_order(oid):
 @login_required
 def add_order_item(oid):
     order = OrderModel.query.get_or_404(oid)
+
     if order.status != "open":
         flash("No se puede modificar una orden cerrada.", "danger")
         return redirect(url_for("order_detail", oid=oid))
-    pid = request.form.get("product_id")
-    qty_s = request.form.get("quantity", "1")
+
     try:
-        qty  = int(qty_s)
-        prod = ProductModel.query.get_or_404(int(pid))
-        existing = OrderItemModel.query.filter_by(order_id=oid, product_id=prod.id).first()
+        product_id = int(request.form.get("product_id"))
+        quantity = int(request.form.get("quantity", "1"))
+
+        if quantity <= 0:
+            raise ValueError("La cantidad debe ser mayor a 0.")
+
+        product = ProductModel.query.get_or_404(product_id)
+        existing = OrderItemModel.query.filter_by(order_id=oid, product_id=product.id).first()
+
         if existing:
-            existing.quantity += qty
+            existing.quantity += quantity
         else:
             db.session.add(OrderItemModel(
-                order_id=oid, product_id=prod.id,
-                quantity=qty, unit_price=prod.price))
+                order_id=oid,
+                product_id=product.id,
+                quantity=quantity,
+                unit_price=product.price
+            ))
+
         db.session.commit()
-        flash(f"{prod.name} agregado a la orden.", "success")
-    except Exception as e:
+        flash(f"{product.name} agregado a la orden.", "success")
+    except (ValueError, TypeError) as e:
         flash(str(e), "danger")
+
     return redirect(url_for("order_detail", oid=oid))
 
 
@@ -452,7 +463,7 @@ def remove_order_item(oid, iid):
     return redirect(url_for("order_detail", oid=oid))
 
 
-@app.route("/bills")
+@app.route("/bills", methods=["GET"])
 @login_required
 def list_bills():
     status = request.args.get("status", "")
@@ -482,7 +493,7 @@ def generate_bill(oid):
     return redirect(url_for("bill_detail", bid=bill.id))
 
 
-@app.route("/bills/<int:bid>")
+@app.route("/bills/<int:bid>", methods=["GET"])
 @login_required
 def bill_detail(bid):
     bill = BillModel.query.get_or_404(bid)
@@ -543,7 +554,7 @@ def pay_bill(bid):
     return redirect(url_for("list_bills"))
 
 
-@app.route("/reservations")
+@app.route("/reservations", methods=["GET"])
 @login_required
 def list_reservations():
     filter_date = request.args.get("date", "")
@@ -553,7 +564,7 @@ def list_reservations():
         try:
             d = datetime.strptime(filter_date, "%Y-%m-%d").date()
             q = q.filter_by(date=d)
-        except:
+        except ValueError:
             pass
     if filter_status:
         q = q.filter_by(status=filter_status)
@@ -658,7 +669,7 @@ def get_max_ticket(bills):
     return max_ticket
 
 
-@app.route("/reports")
+@app.route("/reports", methods=["GET"])
 @admin_required
 def reports():
     from sqlalchemy import func
@@ -696,7 +707,7 @@ def reports():
         max_ticket=max_ticket)
 
 
-@app.route("/admin/users")
+@app.route("/admin/users", methods=["GET"])
 @admin_required
 def list_users():
     users = UserModel.query.all()
