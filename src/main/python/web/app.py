@@ -108,7 +108,7 @@ def load_user():
 
 @app.context_processor
 def inject_user():
-    return dict(current_user=g.user, enumerate=enumerate)
+    return {"current_user": g.user, "enumerate": enumerate}
 
 
 @app.route("/login", methods=["GET", "POST"])

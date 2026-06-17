@@ -1,6 +1,9 @@
 from main.python.domain.entities.bill import Bill
 
 
+BILL_NOT_FOUND = "Bill not found"
+
+
 class BillingService:
     def __init__(self, repository):
         self.repository = repository
@@ -14,7 +17,7 @@ class BillingService:
         bill = self.repository.find_by_id(bill_id)
 
         if bill is None:
-            raise ValueError("Bill not found")
+            raise ValueError(BILL_NOT_FOUND)
 
         bill.apply_discount(percentage)
         self.repository.save(bill)
@@ -24,7 +27,7 @@ class BillingService:
         bill = self.repository.find_by_id(bill_id)
 
         if bill is None:
-            raise ValueError("Bill not found")
+            raise ValueError(BILL_NOT_FOUND)
 
         bill.add_tip(amount)
         self.repository.save(bill)
@@ -34,7 +37,7 @@ class BillingService:
         bill = self.repository.find_by_id(bill_id)
 
         if bill is None:
-            raise ValueError("Bill not found")
+            raise ValueError(BILL_NOT_FOUND)
 
         bill.mark_as_paid()
         self.repository.save(bill)
