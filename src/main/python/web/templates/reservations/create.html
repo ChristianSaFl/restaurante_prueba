@@ -13,22 +13,22 @@
   <form method="POST">
     <div class="form-row">
       <div class="form-group">
-        <label>Nombre del cliente</label>
-        <input type="text" name="customer_name" placeholder="ej: Juan Pérez" required autofocus>
+        <label for="customer_name">Nombre del cliente</label>
+        <input type="text" id="customer_name" name="customer_name" placeholder="ej: Juan Pérez" required autofocus>
       </div>
       <div class="form-group">
-        <label>Teléfono</label>
-        <input type="text" name="customer_phone" placeholder="ej: 999888777">
+        <label for="customer_phone">Teléfono</label>
+        <input type="text" id="customer_phone" name="customer_phone" placeholder="ej: 999888777">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Fecha</label>
-        <input type="date" name="date" required min="{{ today }}">
+        <label for="date">Fecha</label>
+        <input type="date" id="date" name="date" required min="{{ today }}">
       </div>
       <div class="form-group">
-        <label>Hora</label>
-        <select name="time">
+        <label for="time">Hora</label>
+        <select id="time" name="time">
           {% for h in ['12:00','12:30','13:00','13:30','14:00','14:30','19:00','19:30','20:00','20:30','21:00','21:30','22:00'] %}
           <option>{{ h }}</option>
           {% endfor %}
@@ -37,12 +37,12 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>N° de comensales</label>
-        <input type="number" name="guests" min="1" max="20" value="2" required>
+        <label for="guests">N° de comensales</label>
+        <input type="number" id="guests" name="guests" min="1" max="20" value="2" required>
       </div>
       <div class="form-group">
-        <label>Mesa preferida</label>
-        <select name="table_id">
+        <label for="table_id">Mesa preferida</label>
+        <select id="table_id" name="table_id">
           <option value="">Sin preferencia</option>
           {% for t in tables %}
           <option value="{{ t.id }}">Mesa {{ t.number }} ({{ t.capacity }}p.) {% if t.location %}· {{ t.location }}{% endif %}</option>
@@ -51,8 +51,8 @@
       </div>
     </div>
     <div class="form-group">
-      <label>Notas adicionales</label>
-      <textarea name="notes" rows="2" placeholder="ej: Ocasión especial, alergias, preferencias..." style="width:100%;padding:9px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;resize:vertical;outline:none"></textarea>
+      <label for="notes">Notas adicionales</label>
+      <textarea id="notes" name="notes" rows="2" placeholder="ej: Ocasión especial, alergias, preferencias..." style="width:100%;padding:9px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;resize:vertical;outline:none"></textarea>
     </div>
     <div class="btn-group">
       <button type="submit" class="btn btn-primary">Crear reserva</button>
