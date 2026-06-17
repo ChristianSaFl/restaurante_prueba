@@ -1,4 +1,4 @@
-import sys, os
+import os
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 from functools import wraps
@@ -17,6 +17,10 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
+
+ORDER_CREATE_TEMPLATE = "orders/create.html"
+RESERVATION_CREATE_TEMPLATE = "reservations/create.html"
+DATE_FORMAT = "%Y-%m-%d"
 
 
 def get_required_env(name):
@@ -108,7 +112,7 @@ def load_user():
 
 @app.context_processor
 def inject_user():
-    return {"current_user": g.user, "enumerate": enumerate}
+    return dict(current_user=g.user, enumerate=enumerate)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -364,7 +368,7 @@ def create_order():
     tables = TableModel.query.order_by(TableModel.number).all()
 
     if request.method != "POST":
-        return render_template("orders/create.html", products=products, tables=tables, error=error)
+        return render_template(ORDER_CREATE_TEMPLATE, products=products, tables=tables, error=error)
 
     product_ids = request.form.getlist("product_id")
     quantities = request.form.getlist("quantity")
@@ -374,7 +378,7 @@ def create_order():
 
     if not product_ids:
         error = "Selecciona al menos un producto."
-        return render_template("orders/create.html", products=products, tables=tables, error=error)
+        return render_template(ORDER_CREATE_TEMPLATE, products=products, tables=tables, error=error)
 
     order = OrderModel(table_id=int(table_id) if table_id else None, notes=notes or None)
     db.session.add(order)
@@ -385,7 +389,7 @@ def create_order():
     if added == 0:
         db.session.rollback()
         error = "No se agregó ningún producto válido."
-        return render_template("orders/create.html", products=products, tables=tables, error=error)
+        return render_template(ORDER_CREATE_TEMPLATE, products=products, tables=tables, error=error)
 
     occupy_table_if_selected(table_id)
     db.session.commit()
@@ -562,7 +566,7 @@ def list_reservations():
     q = ReservationModel.query
     if filter_date:
         try:
-            d = datetime.strptime(filter_date, "%Y-%m-%d").date()
+            d = datetime.strptime(filter_date, DATE_FORMAT).date()
             q = q.filter_by(date=d)
         except ValueError:
             pass
@@ -575,39 +579,93 @@ def list_reservations():
         filter_date=filter_date, filter_status=filter_status)
 
 
+def get_required_form_value(form, field_name, error_message):
+    value = form.get(field_name, "").strip()
+
+    if not value:
+        raise ValueError(error_message)
+
+    return value
+
+
+def get_positive_integer(value, error_message):
+    number = int(value)
+
+    if number <= 0:
+        raise ValueError(error_message)
+
+    return number
+
+
+def get_reservation_date(date_value):
+    reservation_date = datetime.strptime(date_value, DATE_FORMAT).date()
+
+    if reservation_date < date.today():
+        raise ValueError("La fecha no puede ser en el pasado.")
+
+    return reservation_date
+
+
+def get_optional_table_id(form):
+    table_id = form.get("table_id")
+
+    if not table_id:
+        return None
+
+    return int(table_id)
+
+
+def build_reservation_from_form(form):
+    customer_name = get_required_form_value(
+        form,
+        "customer_name",
+        "El nombre del cliente es obligatorio."
+    )
+    date_value = get_required_form_value(
+        form,
+        "date",
+        "La fecha es obligatoria."
+    )
+    time_value = get_required_form_value(
+        form,
+        "time",
+        "La hora es obligatoria."
+    )
+    guests = get_positive_integer(
+        form.get("guests", "0"),
+        "El número de comensales debe ser mayor a 0."
+    )
+    phone = form.get("customer_phone", "").strip()
+    notes = form.get("notes", "").strip()
+
+    return ReservationModel(
+        customer_name=customer_name,
+        customer_phone=phone or None,
+        guests=guests,
+        date=get_reservation_date(date_value),
+        time=time_value,
+        table_id=get_optional_table_id(form),
+        notes=notes or None
+    )
+
+
 @app.route("/reservations/new", methods=["GET", "POST"])
 @login_required
 def create_reservation():
-    error  = None
+    error = None
     tables = TableModel.query.order_by(TableModel.number).all()
+
     if request.method == "POST":
         try:
-            name     = request.form.get("customer_name", "").strip()
-            phone    = request.form.get("customer_phone", "").strip()
-            guests_s = request.form.get("guests", "0")
-            date_s   = request.form.get("date", "")
-            time_s   = request.form.get("time", "")
-            table_id = request.form.get("table_id") or None
-            notes    = request.form.get("notes", "").strip()
-            if not name:   raise ValueError("El nombre del cliente es obligatorio.")
-            if not date_s: raise ValueError("La fecha es obligatoria.")
-            if not time_s: raise ValueError("La hora es obligatoria.")
-            guests = int(guests_s)
-            if guests <= 0: raise ValueError("El número de comensales debe ser mayor a 0.")
-            res_date = datetime.strptime(date_s, "%Y-%m-%d").date()
-            if res_date < date.today():
-                raise ValueError("La fecha no puede ser en el pasado.")
-            db.session.add(ReservationModel(
-                customer_name=name, customer_phone=phone or None,
-                guests=guests, date=res_date, time=time_s,
-                table_id=int(table_id) if table_id else None,
-                notes=notes or None))
+            reservation = build_reservation_from_form(request.form)
+            db.session.add(reservation)
             db.session.commit()
-            flash(f"Reserva para '{name}' creada.", "success")
+            flash(f"Reserva para '{reservation.customer_name}' creada.", "success")
             return redirect(url_for("list_reservations"))
         except ValueError as e:
             error = str(e)
-    return render_template("reservations/create.html", error=error, tables=tables)
+
+    return render_template(RESERVATION_CREATE_TEMPLATE, error=error, tables=tables)
 
 
 @app.route("/reservations/<int:rid>/confirm", methods=["POST"])
