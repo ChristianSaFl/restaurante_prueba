@@ -2,7 +2,7 @@ import sys, os
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 from functools import wraps
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from dotenv import load_dotenv
 load_dotenv()
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -143,7 +143,7 @@ def get_today_revenue(today):
 
 
 def get_dashboard_data():
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
 
     return {
         "total_products": ProductModel.query.filter_by(available=True).count(),
@@ -545,7 +545,7 @@ def pay_bill(bid):
         return redirect(url_for("bill_detail", bid=bid))
     method = request.form.get("payment_method", "efectivo")
     bill.paid           = True
-    bill.paid_at        = datetime.utcnow()
+    bill.paid_at        = datetime.now(timezone.utc)
     bill.payment_method = method
     if bill.order.table:
         bill.order.table.occupied = False
@@ -645,7 +645,7 @@ def get_last_seven_days_revenue():
     revenues = []
 
     for i in range(6, -1, -1):
-        current_day = (datetime.utcnow() - timedelta(days=i)).date()
+        current_day = (datetime.now(timezone.utc) - timedelta(days=i)).date()
         paid_bills = BillModel.query.filter(
             BillModel.paid == True,
             db.func.date(BillModel.paid_at) == current_day
