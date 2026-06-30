@@ -2,7 +2,7 @@ FROM jenkins/jenkins:lts
 
 USER root
 
-# Python + herramientas básicas de build
+# Python + herramientas básicas de build + unzip (para sonar-scanner)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-venv \
@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg \
     lsb-release \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear symlink para que "python3" y "python" funcionen igual
@@ -25,5 +26,14 @@ RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /
 
 # Dar permisos al usuario jenkins para usar Docker (vía socket montado)
 RUN groupadd -f docker && usermod -aG docker jenkins
+
+# SonarQube Scanner CLI
+ENV SONAR_SCANNER_VERSION=5.0.1.3006
+RUN curl -fsSLo /tmp/sonar-scanner.zip \
+    https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip && \
+    unzip -q /tmp/sonar-scanner.zip -d /opt && \
+    mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux /opt/sonar-scanner && \
+    rm /tmp/sonar-scanner.zip && \
+    ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
 USER jenkins
