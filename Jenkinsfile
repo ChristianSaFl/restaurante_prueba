@@ -219,7 +219,7 @@ initialize_database()
                         -config api.disablekey=true \
                         -config scanner.attackOnStart=true &
                     ZAP_PID=$!
-                    sleep 10
+                    sleep 25
 
                     # Spider + escaneo activo
                     curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/spider/action/scan/?url=http://127.0.0.1:${APP_PORT}&maxChildren=10"

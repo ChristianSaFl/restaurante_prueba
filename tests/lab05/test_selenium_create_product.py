@@ -141,8 +141,16 @@ class TestCreateProductWeb(unittest.TestCase):
 
     # ── Métodos auxiliares ────────────────────────────────────────────────────
 
+    def _login(self):
+        """Inicia sesión como admin antes de acceder a rutas protegidas."""
+        self.driver.get(f"{BASE_URL}/login")
+        self.driver.find_element(By.NAME, "username").send_keys("admin")
+        self.driver.find_element(By.NAME, "password").send_keys("admin123")
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
     def _go_to_create(self):
-        """Navega al formulario de creación de producto."""
+        """Navega al formulario de creación de producto (con login previo)."""
+        self._login()
         self.driver.get(f"{BASE_URL}/products/new")
 
     def _fill_and_submit(self, name: str, price: str):
