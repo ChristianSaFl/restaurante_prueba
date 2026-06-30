@@ -10,6 +10,15 @@ pipeline {
         DOCKER_IMAGE      = "restaurante_final:${env.BUILD_NUMBER}"
     }
 
+    // Trigger automático por commit: requiere el plugin "GitHub" instalado
+    // y un webhook configurado en el repositorio remoto.
+    // Para pruebas locales sin ese plugin, usa pollSCM en su lugar:
+    // triggers {
+    //     pollSCM('H/5 * * * *')   // revisa el repo cada 5 minutos
+    // }
+    triggers {
+        githubPush()
+    }
 
     stages {
 
@@ -275,16 +284,26 @@ initialize_database()
     // ─────────────────────────────────────────
     post {
         success {
-            echo "Pipeline completado exitosamente — Build #${env.BUILD_NUMBER}"
-            githubNotify status: 'SUCCESS',
-                         description: 'Pipeline CI/CD OK',
-                         context: 'jenkins/pipeline'
+            echo "✅ Pipeline completado exitosamente — Build #${env.BUILD_NUMBER}"
+            // Notificación a GitHub: requiere credenciales configuradas explícitamente.
+            // Descomentar y ajustar cuando se tenga el token de GitHub en Jenkins:
+            // githubNotify status: 'SUCCESS',
+            //              description: 'Pipeline CI/CD OK',
+            //              context: 'jenkins/pipeline',
+            //              repo: 'restaurante_prueba',
+            //              account: 'ChristianSaFl',
+            //              credentialsId: 'github-token',
+            //              sha: env.GIT_COMMIT
         }
         failure {
-            echo "Pipeline fallido — Build #${env.BUILD_NUMBER}"
-            githubNotify status: 'FAILURE',
-                         description: 'Pipeline CI/CD FAILED',
-                         context: 'jenkins/pipeline'
+            echo "❌ Pipeline fallido — Build #${env.BUILD_NUMBER}"
+            // githubNotify status: 'FAILURE',
+            //              description: 'Pipeline CI/CD FAILED',
+            //              context: 'jenkins/pipeline',
+            //              repo: 'restaurante_prueba',
+            //              account: 'ChristianSaFl',
+            //              credentialsId: 'github-token',
+            //              sha: env.GIT_COMMIT
         }
         always {
             archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
