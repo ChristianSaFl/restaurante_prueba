@@ -103,6 +103,7 @@ pipeline {
                 sh '''
                     . venv/bin/activate
                     # Levantar la app en background para Selenium
+                    mkdir -p instance
                     export DATABASE_URL=sqlite:///instance/test_functional.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
@@ -143,6 +144,7 @@ initialize_database()
                 sh '''
                     . venv/bin/activate
                     # Levantar app para JMeter
+                    mkdir -p instance
                     export DATABASE_URL=sqlite:///instance/test_perf.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
@@ -191,6 +193,7 @@ initialize_database()
                 sh '''
                     . venv/bin/activate
                     # Levantar app para ZAP
+                    mkdir -p instance
                     export DATABASE_URL=sqlite:///instance/test_sec.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
@@ -263,19 +266,22 @@ initialize_database()
         // ─────────────────────────────────────────
         stage('8. Despliegue Automatico') {
             steps {
-                sh '''
-                    # Detener contenedor anterior si existe
-                    docker stop restaurante_app 2>/dev/null || true
-                    docker rm   restaurante_app 2>/dev/null || true
+                withCredentials([file(credentialsId: 'restaurante-env-file', variable: 'ENV_FILE')]) {
+                    sh '''
+                        # Detener contenedor anterior si existe
+                        docker stop restaurante_app 2>/dev/null || true
+                        docker rm   restaurante_app 2>/dev/null || true
 
-                    # Levantar nuevo contenedor
-                    docker run -d \
-                        --name restaurante_app \
-                        --restart unless-stopped \
-                        -p ${APP_PORT}:8083 \
-                        --env-file .env \
-                        restaurante_final:latest
-                '''
+                        # Levantar nuevo contenedor usando el .env inyectado
+                        # de forma segura desde las credenciales de Jenkins
+                        docker run -d \
+                            --name restaurante_app \
+                            --restart unless-stopped \
+                            -p ${APP_PORT}:8083 \
+                            --env-file ${ENV_FILE} \
+                            restaurante_final:latest
+                    '''
+                }
             }
         }
     }
