@@ -45,4 +45,21 @@ RUN curl -fsSLo /tmp/jmeter.tgz \
     rm /tmp/jmeter.tgz && \
     ln -s /opt/jmeter/bin/jmeter /usr/local/bin/jmeter
 
+# Google Chrome (headless, requerido por Selenium/ChromeDriver)
+RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
+    > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && apt-get install -y --no-install-recommends google-chrome-stable && \
+    rm -rf /var/lib/apt/lists/*
+
+# OWASP ZAP (Security testing)
+ENV ZAP_VERSION=2.16.1
+RUN curl -fsSLo /tmp/zap.tar.gz \
+    https://github.com/zaproxy/zaproxy/releases/download/v${ZAP_VERSION}/ZAP_${ZAP_VERSION}_Linux.tar.gz && \
+    tar -xzf /tmp/zap.tar.gz -C /opt && \
+    mv /opt/ZAP_${ZAP_VERSION} /opt/zap && \
+    rm /tmp/zap.tar.gz && \
+    ln -s /opt/zap/zap.sh /usr/local/bin/zap.sh && \
+    chmod +x /opt/zap/zap.sh
+
 USER jenkins
