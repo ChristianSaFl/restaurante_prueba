@@ -104,7 +104,7 @@ pipeline {
                     . venv/bin/activate
                     # Levantar la app en background para Selenium
                     mkdir -p instance
-                    export DATABASE_URL=sqlite:///instance/test_functional.db
+                    export DATABASE_URL=sqlite:////${WORKSPACE}/instance/test_functional.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
                     export STAFF_INITIAL_PASSWORD=staff123
@@ -145,7 +145,7 @@ initialize_database()
                     . venv/bin/activate
                     # Levantar app para JMeter
                     mkdir -p instance
-                    export DATABASE_URL=sqlite:///instance/test_perf.db
+                    export DATABASE_URL=sqlite:////${WORKSPACE}/instance/test_perf.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
                     export STAFF_INITIAL_PASSWORD=staff123
@@ -194,7 +194,7 @@ initialize_database()
                     . venv/bin/activate
                     # Levantar app para ZAP
                     mkdir -p instance
-                    export DATABASE_URL=sqlite:///instance/test_sec.db
+                    export DATABASE_URL=sqlite:////${WORKSPACE}/instance/test_sec.db
                     export SECRET_KEY=test-secret
                     export ADMIN_INITIAL_PASSWORD=admin123
                     export STAFF_INITIAL_PASSWORD=staff123
