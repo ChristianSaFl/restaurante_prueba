@@ -214,12 +214,37 @@ initialize_database()
                     mkdir -p reports/zap
 
                     # Escaneo pasivo con ZAP en modo daemon
+                    # -config autoupdate.*: evita que ZAP se quede descargando/instalando
+                    # los add-ons pendientes al arrancar (eso es lo que hacía que el API
+                    # tardara mucho más que el sleep fijo en quedar disponible).
                     zap.sh -daemon \
                         -port ${ZAP_PORT} \
                         -config api.disablekey=true \
-                        -config scanner.attackOnStart=true &
+                        -config scanner.attackOnStart=true \
+                        -config autoupdate.checkOnStart=false \
+                        -config autoupdate.checkAddonUpdates=false \
+                        -config autoupdate.installAddonUpdates=false &
                     ZAP_PID=$!
-                    sleep 25
+
+                    # Esperar activamente a que el API de ZAP responda, en lugar de
+                    # confiar en un sleep fijo (frágil: el tiempo de arranque varía).
+                    echo "Esperando a que ZAP esté listo..."
+                    ZAP_READY=false
+                    for i in $(seq 1 30); do
+                        if curl -s -o /dev/null "http://${ZAP_HOST}:${ZAP_PORT}/JSON/core/view/version/"; then
+                            echo "ZAP listo tras ${i} intentos."
+                            ZAP_READY=true
+                            break
+                        fi
+                        sleep 2
+                    done
+
+                    if [ "$ZAP_READY" != "true" ]; then
+                        echo "ZAP no respondió a tiempo. Abortando etapa de seguridad."
+                        kill $ZAP_PID 2>/dev/null || true
+                        kill $(cat /tmp/gunicorn_sec.pid) 2>/dev/null || true
+                        exit 1
+                    fi
 
                     # Spider + escaneo activo
                     curl "http://${ZAP_HOST}:${ZAP_PORT}/JSON/spider/action/scan/?url=http://127.0.0.1:${APP_PORT}&maxChildren=10"
