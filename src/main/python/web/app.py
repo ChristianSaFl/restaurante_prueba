@@ -82,6 +82,14 @@ def initialize_database():
         seed()
 
 
+def _clear_products():
+    """Elimina todos los productos. Utilidad para tests funcionales (Selenium)
+    que necesitan partir de un estado limpio antes de cada caso de prueba."""
+    with app.app_context():
+        ProductModel.query.delete()
+        db.session.commit()
+
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
