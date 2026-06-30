@@ -72,6 +72,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
+                    export PYTHONPATH=src
                     pytest tests/domain/ tests/services/ tests/repositories/ \
                         --tb=short \
                         --junitxml=reports/unit-results.xml \
