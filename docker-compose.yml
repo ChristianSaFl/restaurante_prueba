@@ -1,0 +1,74 @@
+services:
+
+  # ─────────────────────────────────────────
+  # App principal — Flask POS
+  # ─────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: restaurante_app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8083:8083"
+
+  # ─────────────────────────────────────────
+  # Microservicio de Reservas
+  # ─────────────────────────────────────────
+  reservations:
+    build:
+      context: .
+      dockerfile: Dockerfile.reservations
+    container_name: restaurante_reservations
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "5001:5001"
+
+  # ─────────────────────────────────────────
+  # SonarQube — Análisis estático
+  # ─────────────────────────────────────────
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: restaurante_sonarqube
+    restart: unless-stopped
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    ports:
+      - "9000:9000"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  # ─────────────────────────────────────────
+  # Jenkins — CI/CD
+  # ─────────────────────────────────────────
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: restaurante_jenkins
+    restart: unless-stopped
+    user: root
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:
+  jenkins_home:
+
+networks:
+  default:
+    name: restaurante_network

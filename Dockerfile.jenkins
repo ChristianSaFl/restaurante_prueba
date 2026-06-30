@@ -1,0 +1,29 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Python + herramientas básicas de build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-venv \
+    python3-pip \
+    curl \
+    gnupg \
+    lsb-release \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear symlink para que "python3" y "python" funcionen igual
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+# Docker CLI (para que Jenkins pueda construir/correr imágenes usando
+# el socket de Docker del host, montado via docker-compose)
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+    > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && apt-get install -y --no-install-recommends docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
+
+# Dar permisos al usuario jenkins para usar Docker (vía socket montado)
+RUN groupadd -f docker && usermod -aG docker jenkins
+
+USER jenkins
