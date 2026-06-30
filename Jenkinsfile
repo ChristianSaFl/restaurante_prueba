@@ -120,6 +120,7 @@ initialize_database()
 
                     sleep 3
 
+                    export PYTHONPATH=src
                     pytest tests/lab05/ \
                         --tb=short \
                         --junitxml=reports/functional-results.xml \

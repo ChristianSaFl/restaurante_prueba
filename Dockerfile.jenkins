@@ -36,4 +36,13 @@ RUN curl -fsSLo /tmp/sonar-scanner.zip \
     rm /tmp/sonar-scanner.zip && \
     ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
 
+# Apache JMeter (Performance testing)
+ENV JMETER_VERSION=5.6.3
+RUN curl -fsSLo /tmp/jmeter.tgz \
+    https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz && \
+    tar -xzf /tmp/jmeter.tgz -C /opt && \
+    mv /opt/apache-jmeter-${JMETER_VERSION} /opt/jmeter && \
+    rm /tmp/jmeter.tgz && \
+    ln -s /opt/jmeter/bin/jmeter /usr/local/bin/jmeter
+
 USER jenkins
