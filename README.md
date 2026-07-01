@@ -40,7 +40,7 @@ Proyecto desarrollado de forma individual.
 
 ---
 
-##3. Funcionalidades
+## 3. Funcionalidades
 
 La aplicación cubre el ciclo completo de operación de un restaurante:
 
