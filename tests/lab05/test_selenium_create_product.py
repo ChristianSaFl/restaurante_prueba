@@ -155,13 +155,29 @@ class TestCreateProductWeb(unittest.TestCase):
         self.driver.get(f"{BASE_URL}/products/new")
 
     def _fill_and_submit(self, name: str, price: str):
-        """Rellena el formulario y hace clic en Guardar."""
+        """Rellena el formulario y lo envía.
+
+        IMPORTANTE: create.html define los inputs con `required` (nombre y
+        precio) y `min="0.01"` (precio). Si se hace clic real en el botón
+        submit, el navegador bloquea el envío mediante validación HTML5
+        nativa cuando los valores no cumplen esas restricciones (nombre
+        vacío, precio 0, precio negativo, precio vacío) — el formulario
+        nunca llega al servidor, por lo que la validación de backend
+        (la que estos casos de prueba quieren ejercitar) nunca se dispara.
+
+        Se asignan los valores por JS y se envía con form.submit(), que
+        bypasea la validación de restricciones nativa del navegador
+        (a diferencia de un click de usuario), permitiendo que datos
+        "inválidos" lleguen al servidor tal como estos tests esperan.
+        """
         self._go_to_create()
-        self.driver.find_element(By.ID, "name").clear()
-        self.driver.find_element(By.ID, "name").send_keys(name)
-        self.driver.find_element(By.ID, "price").clear()
-        self.driver.find_element(By.ID, "price").send_keys(price)
-        self.driver.find_element(By.ID, "submit-btn").click()
+        name_field = self.driver.find_element(By.ID, "name")
+        price_field = self.driver.find_element(By.ID, "price")
+        self.driver.execute_script("arguments[0].value = arguments[1];", name_field, name)
+        self.driver.execute_script("arguments[0].value = arguments[1];", price_field, price)
+        self.driver.execute_script(
+            "document.getElementById('create-product-form').submit();"
+        )
 
     def _has_error(self) -> bool:
         """Verifica si el formulario muestra un mensaje de error."""
