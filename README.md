@@ -40,21 +40,79 @@ Proyecto desarrollado de forma individual.
 
 ---
 
-## 3. Funcionalidades
+3. Funcionalidades
 
 La aplicación cubre el ciclo completo de operación de un restaurante:
 
-- **Autenticación**: login/logout con roles de usuario (admin, staff).
-- **Gestión de mesas**: alta de mesas, ocupar/liberar, consulta de disponibilidad.
-- **Gestión de productos (menú)**: alta, edición y eliminación de productos con validación de nombre y precio.
-- **Gestión de pedidos**: creación de pedidos, agregar/quitar ítems, cierre de pedido.
-- **Facturación**: generación de boleta a partir de un pedido, aplicación de descuentos y propinas, marcado de pago, cálculo automático de impuestos (IGV 18%).
-- **Reservas**: creación, confirmación, cancelación y eliminación de reservas — implementado como microservicio REST independiente del monolito principal.
-- **Reportes**: vista consolidada de la operación del restaurante.
-- **Administración de usuarios**: alta y baja de usuarios del sistema (solo admin).
 
-> Las funcionalidades pueden verificarse directamente navegando la aplicación desplegada (ver [sección 9](#9-cómo-ejecutar-el-proyecto)); no se incluye diagrama de casos de uso UML en esta entrega.
+Autenticación: login/logout con roles de usuario (admin, staff).
+Gestión de mesas: alta de mesas, ocupar/liberar, consulta de disponibilidad.
+Gestión de productos (menú): alta, edición y eliminación de productos con validación de nombre y precio.
+Gestión de pedidos: creación de pedidos, agregar/quitar ítems, cierre de pedido.
+Facturación: generación de boleta a partir de un pedido, aplicación de descuentos y propinas, marcado de pago, cálculo automático de impuestos (IGV 18%).
+Reservas: creación, confirmación, cancelación y eliminación de reservas — implementado como microservicio REST independiente del monolito principal.
+Reportes: vista consolidada de la operación del restaurante.
+Administración de usuarios: alta y baja de usuarios del sistema (solo admin).
 
+
+Diagrama de Casos de Uso (UML)
+
+#mermaid-rrk-r1 { font-family: "Anthropic Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; fill: rgb(229, 229, 229); }
+#mermaid-rrk-r1 .edge-animation-slow { stroke-dashoffset: 900; animation: 50s linear 0s infinite normal none running dash; stroke-linecap: round; stroke-dasharray: 9, 5 !important; }
+#mermaid-rrk-r1 .edge-animation-fast { stroke-dashoffset: 900; animation: 20s linear 0s infinite normal none running dash; stroke-linecap: round; stroke-dasharray: 9, 5 !important; }
+#mermaid-rrk-r1 .error-icon { fill: rgb(204, 120, 92); }
+#mermaid-rrk-r1 .error-text { fill: rgb(51, 135, 163); stroke: rgb(51, 135, 163); }
+#mermaid-rrk-r1 .edge-thickness-normal { stroke-width: 1px; }
+#mermaid-rrk-r1 .edge-thickness-thick { stroke-width: 3.5px; }
+#mermaid-rrk-r1 .edge-pattern-solid { stroke-dasharray: 0; }
+#mermaid-rrk-r1 .edge-thickness-invisible { stroke-width: 0; fill: none; }
+#mermaid-rrk-r1 .edge-pattern-dashed { stroke-dasharray: 3; }
+#mermaid-rrk-r1 .edge-pattern-dotted { stroke-dasharray: 2; }
+#mermaid-rrk-r1 .marker { fill: rgb(161, 161, 161); stroke: rgb(161, 161, 161); }
+#mermaid-rrk-r1 .marker.cross { stroke: rgb(161, 161, 161); }
+#mermaid-rrk-r1 svg { font-family: "Anthropic Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }
+#mermaid-rrk-r1 p { margin: 0px; }
+#mermaid-rrk-r1 .label { font-family: "Anthropic Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: rgb(229, 229, 229); }
+#mermaid-rrk-r1 .cluster-label text { fill: rgb(51, 135, 163); }
+#mermaid-rrk-r1 .cluster-label span { color: rgb(51, 135, 163); }
+#mermaid-rrk-r1 .cluster-label span p { background-color: transparent; }
+#mermaid-rrk-r1 .label text, #mermaid-rrk-r1 span { fill: rgb(229, 229, 229); color: rgb(229, 229, 229); }
+#mermaid-rrk-r1 .node rect, #mermaid-rrk-r1 .node circle, #mermaid-rrk-r1 .node ellipse, #mermaid-rrk-r1 .node polygon, #mermaid-rrk-r1 .node path { fill: transparent; stroke: rgb(161, 161, 161); stroke-width: 1px; }
+#mermaid-rrk-r1 .rough-node .label text, #mermaid-rrk-r1 .node .label text, #mermaid-rrk-r1 .image-shape .label, #mermaid-rrk-r1 .icon-shape .label { text-anchor: middle; }
+#mermaid-rrk-r1 .node .katex path { fill: rgb(0, 0, 0); stroke: rgb(0, 0, 0); stroke-width: 1px; }
+#mermaid-rrk-r1 .rough-node .label, #mermaid-rrk-r1 .node .label, #mermaid-rrk-r1 .image-shape .label, #mermaid-rrk-r1 .icon-shape .label { text-align: center; }
+#mermaid-rrk-r1 .node.clickable { cursor: pointer; }
+#mermaid-rrk-r1 .root .anchor path { stroke-width: 0; stroke: rgb(161, 161, 161); fill: rgb(161, 161, 161) !important; }
+#mermaid-rrk-r1 .arrowheadPath { fill: rgb(11, 11, 11); }
+#mermaid-rrk-r1 .edgePath .path { stroke: rgb(161, 161, 161); stroke-width: 1px; }
+#mermaid-rrk-r1 .flowchart-link { stroke: rgb(161, 161, 161); fill: none; }
+#mermaid-rrk-r1 .edgeLabel { background-color: transparent; text-align: center; }
+#mermaid-rrk-r1 .edgeLabel p { background-color: transparent; }
+#mermaid-rrk-r1 .edgeLabel rect { opacity: 0.5; background-color: transparent; fill: transparent; }
+#mermaid-rrk-r1 .labelBkg { background-color: rgba(0, 0, 0, 0.5); }
+#mermaid-rrk-r1 .cluster rect { fill: rgb(204, 120, 92); stroke: rgb(138, 115, 107); stroke-width: 1px; }
+#mermaid-rrk-r1 .cluster text { fill: rgb(51, 135, 163); }
+#mermaid-rrk-r1 .cluster span { color: rgb(51, 135, 163); }
+#mermaid-rrk-r1 div.mermaidTooltip { position: absolute; text-align: center; max-width: 200px; padding: 2px; font-family: "Anthropic Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 12px; background: rgb(204, 120, 92); border: 1px solid rgb(138, 115, 107); border-radius: 2px; pointer-events: none; z-index: 100; }
+#mermaid-rrk-r1 .flowchartTitleText { text-anchor: middle; font-size: 18px; fill: rgb(229, 229, 229); }
+#mermaid-rrk-r1 rect.text { fill: none; stroke-width: 0; }
+#mermaid-rrk-r1 .icon-shape, #mermaid-rrk-r1 .image-shape { background-color: transparent; text-align: center; }
+#mermaid-rrk-r1 .icon-shape p, #mermaid-rrk-r1 .image-shape p { background-color: transparent; padding: 2px; }
+#mermaid-rrk-r1 .icon-shape .label rect, #mermaid-rrk-r1 .image-shape .label rect { opacity: 0.5; background-color: transparent; fill: transparent; }
+#mermaid-rrk-r1 .label-icon { display: inline-block; height: 1em; overflow: visible; vertical-align: -0.125em; }
+#mermaid-rrk-r1 .node .label-icon path { fill: currentcolor; stroke: revert; stroke-width: revert; }
+#mermaid-rrk-r1 .node .neo-node { stroke: rgb(161, 161, 161); }
+#mermaid-rrk-r1 [data-look="neo"].node rect, #mermaid-rrk-r1 [data-look="neo"].cluster rect, #mermaid-rrk-r1 [data-look="neo"].node polygon { stroke: url("#mermaid-rrk-r1-gradient"); filter: drop-shadow(rgb(185, 185, 185) 1px 2px 2px); }
+#mermaid-rrk-r1 [data-look="neo"].node path { stroke: url("#mermaid-rrk-r1-gradient"); stroke-width: 1px; }
+#mermaid-rrk-r1 [data-look="neo"].node .outer-path { filter: drop-shadow(rgb(185, 185, 185) 1px 2px 2px); }
+#mermaid-rrk-r1 [data-look="neo"].node .neo-line path { stroke: rgb(161, 161, 161); filter: none; }
+#mermaid-rrk-r1 [data-look="neo"].node circle { stroke: url("#mermaid-rrk-r1-gradient"); filter: drop-shadow(rgb(185, 185, 185) 1px 2px 2px); }
+#mermaid-rrk-r1 [data-look="neo"].node circle .state-start { fill: rgb(0, 0, 0); }
+#mermaid-rrk-r1 [data-look="neo"].icon-shape .icon { fill: url("#mermaid-rrk-r1-gradient"); filter: drop-shadow(rgb(185, 185, 185) 1px 2px 2px); }
+#mermaid-rrk-r1 [data-look="neo"].icon-shape .icon-neo path { stroke: url("#mermaid-rrk-r1-gradient"); filter: drop-shadow(rgb(185, 185, 185) 1px 2px 2px); }
+#mermaid-rrk-r1 :root { --mermaid-font-family: "Anthropic Sans",system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }Restaurante FinalAdministradorStaffIniciar / Cerrar sesiónGestionar MesasGestionar ProductosGestionar PedidosGenerar BoletaGestionar ReservasVer ReportesAdministrar Usuarios
+
+Nota: UC8 (Administrar Usuarios) está restringido solo al rol Admin a nivel de implementación.
 ---
 
 ## 4. Arquitectura
