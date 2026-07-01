@@ -40,25 +40,56 @@ Proyecto desarrollado de forma individual.
 
 ---
 
+
 ## 3. Funcionalidades
-
+ 
 La aplicación cubre el ciclo completo de operación de un restaurante:
-
-
-Autenticación: login/logout con roles de usuario (admin, staff).
-Gestión de mesas: alta de mesas, ocupar/liberar, consulta de disponibilidad.
-Gestión de productos (menú): alta, edición y eliminación de productos con validación de nombre y precio.
-Gestión de pedidos: creación de pedidos, agregar/quitar ítems, cierre de pedido.
-Facturación: generación de boleta a partir de un pedido, aplicación de descuentos y propinas, marcado de pago, cálculo automático de impuestos (IGV 18%).
-Reservas: creación, confirmación, cancelación y eliminación de reservas — implementado como microservicio REST independiente del monolito principal.
-Reportes: vista consolidada de la operación del restaurante.
-Administración de usuarios: alta y baja de usuarios del sistema (solo admin).
-
-
-
-
-
-
+ 
+- **Autenticación:** login/logout con roles de usuario (admin, staff).
+- **Gestión de mesas:** alta de mesas, ocupar/liberar, consulta de disponibilidad.
+- **Gestión de productos (menú):** alta, edición y eliminación de productos con validación de nombre y precio.
+- **Gestión de pedidos:** creación de pedidos, agregar/quitar ítems, cierre de pedido.
+- **Facturación:** generación de boleta a partir de un pedido, aplicación de descuentos y propinas, marcado de pago, cálculo automático de impuestos (IGV 18%).
+- **Reservas:** creación, confirmación, cancelación y eliminación de reservas — implementado como microservicio REST independiente del monolito principal.
+- **Reportes:** vista consolidada de la operación del restaurante.
+- **Administración de usuarios:** alta y baja de usuarios del sistema (solo admin).
+### Diagrama de Casos de Uso (UML)
+ 
+```mermaid
+flowchart LR
+    Admin([Administrador])
+    Staff([Staff])
+ 
+    subgraph Sistema["Restaurante Final"]
+        UC1(Iniciar / Cerrar sesión)
+        UC2(Gestionar Mesas)
+        UC3(Gestionar Productos)
+        UC4(Gestionar Pedidos)
+        UC5(Generar Boleta)
+        UC6(Gestionar Reservas)
+        UC7(Ver Reportes)
+        UC8(Administrar Usuarios)
+    end
+ 
+    Admin --> UC1
+    Admin --> UC2
+    Admin --> UC3
+    Admin --> UC4
+    Admin --> UC5
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+ 
+    Staff --> UC1
+    Staff --> UC2
+    Staff --> UC4
+    Staff --> UC5
+    Staff --> UC6
+```
+ 
+*Nota: `UC8 (Administrar Usuarios)` está restringido solo al rol Admin a nivel de implementación.*
+ 
+---
 ## 4. Arquitectura
 
 El proyecto sigue un enfoque inspirado en **Domain-Driven Design (DDD)**, separando el código en capas con responsabilidades claras:
