@@ -10,12 +10,7 @@ pipeline {
         DOCKER_IMAGE      = "restaurante_final:${env.BUILD_NUMBER}"
     }
 
-    // Trigger automático por commit: requiere el plugin "GitHub" instalado
-    // y un webhook configurado en el repositorio remoto.
-    // Para pruebas locales sin ese plugin, usa pollSCM en su lugar:
-    // triggers {
-    //     pollSCM('H/5 * * * *')   // revisa el repo cada 5 minutos
-    // }
+
     triggers {
         githubPush()
     }
