@@ -9,7 +9,8 @@
 
 <div class="card">
   <form method="GET" class="filter-bar">
-    <input type="date" name="date" value="{{ filter_date }}" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
+    <label class="sr-only" for="reservation_date_filter">Fecha de reserva</label>
+    <input type="date" id="reservation_date_filter" name="date" value="{{ filter_date }}" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
     <div class="tabs">
       <a href="/reservations" class="tab {% if not filter_status %}active{% endif %}">Todas</a>
       <a href="/reservations?status=pending" class="tab {% if filter_status=='pending' %}active{% endif %}">Pendientes</a>

@@ -8,8 +8,10 @@
 </div>
 <div class="card">
   <form method="GET" class="filter-bar">
-    <input type="text" name="q" value="{{ q }}" placeholder="Buscar..." style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none;min-width:180px">
-    <select name="category" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
+    <label class="sr-only" for="product_search">Buscar producto</label>
+    <input type="text" id="product_search" name="q" value="{{ q }}" placeholder="Buscar..." style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none;min-width:180px">
+    <label class="sr-only" for="product_category_filter">Categoría</label>
+    <select id="product_category_filter" name="category" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none">
       <option value="">Todas las categorías</option>
       {% for c in categories %}<option value="{{ c }}" {% if c==cat %}selected{% endif %}>{{ c }}</option>{% endfor %}
     </select>

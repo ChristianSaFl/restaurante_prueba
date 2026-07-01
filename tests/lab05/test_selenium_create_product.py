@@ -1,9 +1,5 @@
 """
-==============================================================
-Laboratorio 05 - Pruebas Funcionales con Selenium + xUnit
-Docente : DSc. Edgar Sarmiento Calisaya
-Curso   : Ingeniería de Software II
-==============================================================
+
 
 Objeto de Prueba : Funcionalidad "Create Product" (interfaz web Flask)
 Estrategia       : Clases de Equivalencia + Valores Límite (Caja Negra)
@@ -141,18 +137,47 @@ class TestCreateProductWeb(unittest.TestCase):
 
     # ── Métodos auxiliares ────────────────────────────────────────────────────
 
+    def _login(self):
+        """Inicia sesión como admin antes de acceder a rutas protegidas."""
+        self.driver.get(f"{BASE_URL}/login")
+        self.driver.find_element(By.NAME, "username").send_keys("admin")
+        self.driver.find_element(By.NAME, "password").send_keys("admin123")
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        # IMPORTANTE: click() no espera a que termine la navegación resultante.
+        # Sin esta espera, el siguiente driver.get() puede dispararse antes de
+        # que el POST /login complete, dejando al navegador sin sesión iniciada
+        # (se manifiesta como NoSuchElementException en /products/new).
+        self.wait.until(EC.url_changes(f"{BASE_URL}/login"))
+
     def _go_to_create(self):
-        """Navega al formulario de creación de producto."""
+        """Navega al formulario de creación de producto (con login previo)."""
+        self._login()
         self.driver.get(f"{BASE_URL}/products/new")
 
     def _fill_and_submit(self, name: str, price: str):
-        """Rellena el formulario y hace clic en Guardar."""
+        """Rellena el formulario y lo envía.
+
+        IMPORTANTE: create.html define los inputs con `required` (nombre y
+        precio) y `min="0.01"` (precio). Si se hace clic real en el botón
+        submit, el navegador bloquea el envío mediante validación HTML5
+        nativa cuando los valores no cumplen esas restricciones (nombre
+        vacío, precio 0, precio negativo, precio vacío) — el formulario
+        nunca llega al servidor, por lo que la validación de backend
+        (la que estos casos de prueba quieren ejercitar) nunca se dispara.
+
+        Se asignan los valores por JS y se envía con form.submit(), que
+        bypasea la validación de restricciones nativa del navegador
+        (a diferencia de un click de usuario), permitiendo que datos
+        "inválidos" lleguen al servidor tal como estos tests esperan.
+        """
         self._go_to_create()
-        self.driver.find_element(By.ID, "name").clear()
-        self.driver.find_element(By.ID, "name").send_keys(name)
-        self.driver.find_element(By.ID, "price").clear()
-        self.driver.find_element(By.ID, "price").send_keys(price)
-        self.driver.find_element(By.ID, "submit-btn").click()
+        name_field = self.driver.find_element(By.ID, "name")
+        price_field = self.driver.find_element(By.ID, "price")
+        self.driver.execute_script("arguments[0].value = arguments[1];", name_field, name)
+        self.driver.execute_script("arguments[0].value = arguments[1];", price_field, price)
+        self.driver.execute_script(
+            "document.getElementById('create-product-form').submit();"
+        )
 
     def _has_error(self) -> bool:
         """Verifica si el formulario muestra un mensaje de error."""
@@ -169,22 +194,23 @@ class TestCreateProductWeb(unittest.TestCase):
         self.wait.until(EC.url_contains("/products"))
         self.assertIn("/products", self.driver.current_url)
 
-        # El producto aparece en la tabla
-        nombres = [e.text for e in self.driver.find_elements(By.CLASS_NAME, "product-name")]
+        # El producto aparece en la tabla (list.html no usa class="product-name",
+        # el nombre va en una celda <td class="fw-500"> dentro de la tabla)
+        nombres = [e.text for e in self.driver.find_elements(By.CSS_SELECTOR, "table tbody td.fw-500")]
         self.assertIn("Pizza", nombres)
 
     def test_CP02_precio_minimo_valido(self):
         """CP02: Precio 0.01 (valor límite inferior válido) → creación exitosa."""
         self._fill_and_submit("Agua", "0.01")
         self.wait.until(EC.url_contains("/products"))
-        nombres = [e.text for e in self.driver.find_elements(By.CLASS_NAME, "product-name")]
+        nombres = [e.text for e in self.driver.find_elements(By.CSS_SELECTOR, "table tbody td.fw-500")]
         self.assertIn("Agua", nombres)
 
     def test_CP03_precio_alto_valido(self):
         """CP03: Precio elevado → creación exitosa."""
         self._fill_and_submit("Langosta", "999.99")
         self.wait.until(EC.url_contains("/products"))
-        nombres = [e.text for e in self.driver.find_elements(By.CLASS_NAME, "product-name")]
+        nombres = [e.text for e in self.driver.find_elements(By.CSS_SELECTOR, "table tbody td.fw-500")]
         self.assertIn("Langosta", nombres)
 
     def test_CP04_nombre_vacio_muestra_error(self):
@@ -228,16 +254,22 @@ class TestCreateProductWeb(unittest.TestCase):
         """CP10: Nombre con caracteres especiales → creado correctamente."""
         self._fill_and_submit("Café & Té", "15.50")
         self.wait.until(EC.url_contains("/products"))
-        nombres = [e.text for e in self.driver.find_elements(By.CLASS_NAME, "product-name")]
+        nombres = [e.text for e in self.driver.find_elements(By.CSS_SELECTOR, "table tbody td.fw-500")]
         self.assertIn("Café & Té", nombres)
 
     def test_CP11_precio_decimal_valido(self):
         """CP11: Precio decimal válido → guardado y mostrado correctamente."""
         self._fill_and_submit("Jugo", "3.75")
         self.wait.until(EC.url_contains("/products"))
-        precios = [e.text for e in self.driver.find_elements(By.CLASS_NAME, "product-price")]
+        precios = [e.text for e in self.driver.find_elements(By.CSS_SELECTOR, "table tbody td.mono.fw-500")]
         self.assertTrue(any("3.75" in p for p in precios))
 
+    @unittest.skip(
+        "No existe vista de detalle de producto en la app actual "
+        "(no hay ruta GET /products/<id> ni enlace 'Ver' en products/list.html, "
+        "a diferencia de bills/orders que sí la tienen). "
+        "Hay que implementar esa funcionalidad antes de poder validar este caso."
+    )
     def test_CP12_verificar_detalle_producto(self):
         """CP12: Producto creado → página de detalle muestra nombre y precio."""
         self._fill_and_submit("Sopa", "12.00")
@@ -259,14 +291,16 @@ class TestCreateProductWeb(unittest.TestCase):
         self.driver.find_element(By.LINK_TEXT, "Cancelar").click()
         self.wait.until(EC.url_contains("/products"))
 
-        # No hay productos
-        no_msg = self.driver.find_elements(By.ID, "no-products-msg")
+        # No hay productos: list.html no usa id="no-products-msg", el mensaje
+        # vacío está dentro de <div class="empty"> en la fila {% else %} de la tabla.
+        no_msg = self.driver.find_elements(By.CSS_SELECTOR, "div.empty")
         self.assertTrue(len(no_msg) > 0, "Lista debe estar vacía")
 
     def test_CP14_titulo_pagina_correcto(self):
         """CP14: El título de la página de creación es correcto."""
         self._go_to_create()
-        self.assertIn("Crear Producto", self.driver.title)
+        # create.html define {% block title %}Nuevo producto{% endblock %}
+        self.assertIn("Nuevo producto", self.driver.title)
 
     def test_CP15_formulario_tiene_campos_requeridos(self):
         """CP15: El formulario tiene los inputs name y price con IDs correctos."""

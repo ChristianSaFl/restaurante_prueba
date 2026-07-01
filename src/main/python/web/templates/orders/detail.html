@@ -61,8 +61,8 @@
       <div class="card-title">Agregar producto</div>
       <form method="POST" action="/orders/{{ order.id }}/add-item" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
         <div class="form-group" style="flex:2;margin:0">
-          <label>Producto</label>
-          <select name="product_id">
+          <label for="product_id">Producto</label>
+          <select id="product_id" name="product_id">
             {% set products = [] %}
             {% for it in order.items %}{% set _ = products.append(it.product_id) %}{% endfor %}
             {% from 'macros.html' import product_options ignore missing %}
@@ -73,8 +73,8 @@
           </select>
         </div>
         <div class="form-group" style="width:80px;margin:0">
-          <label>Cant.</label>
-          <input type="number" name="quantity" value="1" min="1" style="text-align:center">
+          <label for="quantity">Cant.</label>
+          <input type="number" id="quantity" name="quantity" value="1" min="1" style="text-align:center">
         </div>
         <button type="submit" class="btn btn-primary">Agregar</button>
       </form>

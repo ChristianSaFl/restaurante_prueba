@@ -12,6 +12,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div class="card-title" style="margin:0">Productos</div>
       <div class="form-group" style="margin:0">
+        <label class="sr-only" for="table_sel">Mesa</label>
         <select id="table_sel" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;outline:none;min-width:160px">
           <option value="">Sin mesa</option>
           {% for t in tables %}<option value="{{ t.id }}">Mesa {{ t.number }} ({{ t.capacity }}p.) {% if t.occupied %}· ocupada{% endif %}</option>{% endfor %}
@@ -30,7 +31,8 @@
           <input type="checkbox" name="product_id" value="{{ p.id }}" id="p{{ p.id }}" style="width:16px;height:16px;accent-color:#2563eb;cursor:pointer;flex-shrink:0">
           <label for="p{{ p.id }}" style="flex:1;cursor:pointer;font-size:13.5px;color:#374151;font-weight:400">{{ p.name }}</label>
           <span class="mono" style="font-size:13px;color:#6b7280;min-width:70px;text-align:right">S/. {{ "%.2f"|format(p.price) }}</span>
-          <input type="number" name="quantity" value="1" min="1" max="99" style="width:52px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;outline:none">
+          <label class="sr-only" for="qty{{ p.id }}">Cantidad de {{ p.name }}</label>
+          <input type="number" id="qty{{ p.id }}" name="quantity" value="1" min="1" max="99" style="width:52px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:center;outline:none">
         </div>
       {% endfor %}
       <div class="btn-group" style="margin-top:20px">
