@@ -40,7 +40,7 @@ Proyecto desarrollado de forma individual.
 
 ---
 
-3. Funcionalidades
+##3. Funcionalidades
 
 La aplicación cubre el ciclo completo de operación de un restaurante:
 
@@ -55,11 +55,9 @@ Reportes: vista consolidada de la operación del restaurante.
 Administración de usuarios: alta y baja de usuarios del sistema (solo admin).
 
 
-Nota: UC8 (Administrar Usuarios) está restringido solo al rol Admin a nivel de implementación.
----
 
-Nota: UC8 (Administrar Usuarios) está restringido solo al rol Admin a nivel de implementación.
----
+
+
 
 ## 4. Arquitectura
 
