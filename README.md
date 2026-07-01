@@ -58,6 +58,9 @@ Administración de usuarios: alta y baja de usuarios del sistema (solo admin).
 Nota: UC8 (Administrar Usuarios) está restringido solo al rol Admin a nivel de implementación.
 ---
 
+Nota: UC8 (Administrar Usuarios) está restringido solo al rol Admin a nivel de implementación.
+---
+
 ## 4. Arquitectura
 
 El proyecto sigue un enfoque inspirado en **Domain-Driven Design (DDD)**, separando el código en capas con responsabilidades claras:
